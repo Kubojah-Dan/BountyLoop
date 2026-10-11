@@ -47,13 +47,19 @@ ml/data/
 !ml/data/**/.gitkeep
 
 # ML artifacts — use Git LFS or DVC for large files
+ml/artifacts/*.onnx
 ml/artifacts/**/*.onnx
+ml/artifacts/*.pt
 ml/artifacts/**/*.pt
+ml/artifacts/*.pkl
 ml/artifacts/**/*.pkl
 # Keep metrics.json and model cards committed (small, text)
 !ml/artifacts/**/*.json
+!ml/artifacts/*.json
 !ml/artifacts/**/*.yaml
+!ml/artifacts/*.yaml
 !ml/artifacts/**/*.md
+!ml/artifacts/*.md
 
 # Storage (uploaded photos)
 storage/

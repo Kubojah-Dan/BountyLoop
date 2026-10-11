@@ -12,6 +12,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
 COPY app/ ./app/
+COPY tests/ ./tests/
 
 # Model directory (mounted read-only from ml/artifacts in docker-compose)
 RUN mkdir -p /app/models

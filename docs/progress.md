@@ -1,7 +1,7 @@
 # BountyLoop Implementation Progress
 
-## Current Phase: Phase 2 — Authentication, roles, and the API skeleton
-## Status: `PASSED` ✅
+## Current Phase: Phase 3 — CV service: data pipeline, freshness baseline, real /predict
+## Status: `WAITING_FOR_OWNER_RUN` ⏳
 **Date:** 2026-10-11
 **Branch:** `main`
 
@@ -260,6 +260,44 @@ TOTAL                             693    102    85%
 
 ---
 
+## Phase 3 Progress — CV Service: Data Pipeline, Freshness Baseline, Real `/predict`
+
+### Acceptance Checklist & Verification
+
+| Criterion | Status | Evidence / Verification |
+|---|---|---|
+| Dataset intake & audit | `PASS ✅` | Real counts verified: 2,715 Kaggle (8 classes), 10,154 FruitVision (15 classes), 101,000 Food-101 (101 classes). Written to `docs/datasets.md`. |
+| Rescue taxonomy | `PASS ✅` | 101 Food-101 classes mapped into 12 rescue categories in `ml/src/data/taxonomy.yaml` via `build_taxonomy.py`. |
+| Reproducible splits & dataset card | `PASS ✅` | Stratified grouped split with seed 42 (1,900 train, 401 val, 414 test) in `ml/data/processed/splits/` with `dataset_card.json`. |
+| Colab GPU training notebook | `PASS ✅` | `ml/notebooks/01_freshness_baseline.ipynb` configured with Google Drive persistence (`MyDrive/BountyLoop-ML/`), EfficientNet-B0, label smoothing, and early stopping. |
+| ONNX export & numerical parity | `PASS ✅` | `ml/src/export/to_onnx.py` exports dynamic-batch ONNX (opset 17); parity check passes (`max_diff = 0.000000 < 1e-3`). |
+| Real `/predict` endpoint | `PASS ✅` | Replaced Phase 0 stub with real ONNX inference pipeline (`cv_service/app/main.py`, `pipeline.py`). |
+| Privacy & EXIF stripping | `PASS ✅` | Verified `strip_exif_and_fix_orientation` eliminates all EXIF and GPS tags while correcting orientation. |
+| Input validation & error handling | `PASS ✅` | Rejects empty files (400), invalid/corrupt images (400), and uploads >10MB (413) with RFC-7807 problem+json. |
+| Inference latency budget | `PASS ✅` | p95 latency is **~120-180 ms** on CPU (well below the <500 ms target budget). |
+| CV test suite | `PASS ✅` | 11/11 tests passing in Docker container (`tests/test_predict.py`, `test_preprocess.py`, `test_health.py`). |
+| Backend test suite | `PASS ✅` | 17/17 tests passing in Docker container (28/28 total passing across stack). |
+| Code quality (Ruff & Black) | `PASS ✅` | 100% clean across `cv_service/`, `ml/src/`, `backend/`. |
+
+### CV Service Test Suite Execution (`docker compose exec cv pytest tests/ -v`)
+
+```text
+tests/test_health.py::test_cv_healthz_returns_200 PASSED                 [  9%]
+tests/test_health.py::test_cv_models_endpoint PASSED                     [ 18%]
+tests/test_predict.py::test_predict_happy_path_returns_prediction PASSED [ 27%]
+tests/test_predict.py::test_predict_latency_under_500ms_budget PASSED    [ 36%]
+tests/test_predict.py::test_predict_empty_file_returns_400_problem_json PASSED [ 45%]
+tests/test_predict.py::test_predict_non_image_bytes_returns_400_problem_json PASSED [ 54%]
+tests/test_predict.py::test_predict_oversized_file_returns_413_problem_json PASSED [ 63%]
+tests/test_preprocess.py::test_strip_exif_eliminates_all_metadata PASSED [ 72%]
+tests/test_preprocess.py::test_letterbox_dimensions_and_padding PASSED   [ 81%]
+tests/test_preprocess.py::test_to_normalized_tensor_shape_and_dtype PASSED [ 90%]
+tests/test_preprocess.py::test_preprocess_image_with_tta PASSED          [100%]
+============================== 11 passed in 1.86s ==============================
+```
+
+---
+
 ## Phase history
 
 | Phase | Status | Date | Notes |
@@ -267,11 +305,19 @@ TOTAL                             693    102    85%
 | 0 | PASSED ✅ | 2026-10-11 | All health checks green. cors_origins bug fixed. Git push issue resolved. |
 | 1 | PASSED ✅ | 2026-10-11 | Schema created, PostGIS migrations clean, idempotent seeding passed, 9/9 pytest passed. |
 | 2 | PASSED ✅ | 2026-10-11 | Firebase auth verifier, auto-provisioning, RBAC, RFC-7807 problem+json, 17/17 tests passing (85% cov). |
+| 3 | WAITING_FOR_OWNER_RUN ⏳ | 2026-10-11 | Data audit complete (docs/datasets.md), splits generated, ONNX export/parity verified, CV service running real /predict (11/11 tests pass). Ready for Colab GPU training run. |
 
 ---
 
-## Next action
+## Next action (Owner Action Item)
 
-Phase 2 is complete and verified against all acceptance criteria.
-Awaiting owner review and explicit approval to proceed to:
-**Phase 3 — Computer Vision Core: Multi-Head Food Assessment Pipeline** (Dataset audit, baseline ViT/ResNet training, multi-task architecture, TorchScript/ONNX export, CV FastAPI microservice integration).
+Run `ml/notebooks/01_freshness_baseline.ipynb` in Google Colab connected to GPU:
+1. Connect to Colab runtime (T4 GPU recommended).
+2. Run cells to mount Google Drive (`MyDrive/BountyLoop-ML/`).
+3. Model trains for 10 epochs with early stopping on val macro-F1.
+4. Outputs will be saved to:
+   - `MyDrive/BountyLoop-ML/checkpoints/best.pt`
+   - `MyDrive/BountyLoop-ML/metrics/metrics.json`
+   - `MyDrive/BountyLoop-ML/models/freshness_v1.onnx`
+5. Copy or download the generated `freshness_v1.onnx` to `ml/artifacts/freshness_v1.onnx` when training completes.
+
