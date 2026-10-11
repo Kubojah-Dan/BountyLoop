@@ -1,4 +1,5 @@
 """Structured JSON logging with request-id propagation."""
+
 from __future__ import annotations
 
 import logging

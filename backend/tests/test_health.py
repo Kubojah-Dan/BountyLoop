@@ -1,4 +1,5 @@
 """Phase 0 tests — verify the API /healthz endpoint returns 200 with expected fields."""
+
 from __future__ import annotations
 
 import pytest

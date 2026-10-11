@@ -9,10 +9,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libgdal-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
+# Install Python dependencies (including dev dependencies for testing)
 COPY pyproject.toml .
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -e .
+    pip install --no-cache-dir -e ".[dev]"
 
 # Copy application source
 COPY . .

@@ -62,8 +62,8 @@ class Settings(BaseSettings):
     tta: bool = True
 
     # ── Impact calculation ────────────────────────────────────────────────────
-    meal_kg_factor: float = 1.2       # kg per meal equivalent
-    impact_co2e_factor: float = 2.5   # kg CO2e per kg food waste avoided [UNVERIFIED]
+    meal_kg_factor: float = 1.2  # kg per meal equivalent
+    impact_co2e_factor: float = 2.5  # kg CO2e per kg food waste avoided [UNVERIFIED]
 
     # ── Matching engine ───────────────────────────────────────────────────────
     max_radius_km: float = 15.0

@@ -1,10 +1,10 @@
 """BountyLoop FastAPI application factory."""
+
 from __future__ import annotations
 
 import logging
-import time
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator
 
 import orjson
 from fastapi import FastAPI, Request

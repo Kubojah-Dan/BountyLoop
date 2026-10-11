@@ -1,8 +1,9 @@
-# Phase 0 Progress — Foundation & Repository Skeleton
+# BountyLoop Implementation Progress
 
+## Current Phase: Phase 1 — Database Schema, PostGIS, Migrations, Seed Data
 ## Status: `PASSED` ✅
 **Date:** 2026-10-11
-**Branch:** `main` (Phase 0 baseline commit)
+**Branch:** `main`
 
 ---
 
@@ -134,7 +135,53 @@ docker compose exec db psql -U bountyloop -c "SELECT postgis_version();"
 make test
 ```
 
-Then share the output. If all pass → Phase 0 is `PASSED` → owner approves Phase 1.
+---
+
+## Phase 1 Progress — Database Schema, PostGIS, Migrations, Seed Data
+
+### Acceptance Checklist & Verification
+
+| Criterion | Status | Evidence / Verification |
+|---|---|---|
+| `alembic upgrade head` runs clean from empty | `PASS ✅` | Successfully ran `001_initial_schema` with PostGIS extension, enums, tables, and spatial GIST indexes |
+| `alembic downgrade base` then `upgrade head` works | `PASS ✅` | Clean rollback (`downgrade base`) and re-apply (`upgrade head`) with zero errors |
+| Seeding is idempotent | `PASS ✅` | 1st run created 1 admin, 5 donors, 8 recipients, 2 sample donations; 2nd run safely detected existing records and skipped without duplicate creation |
+| PostGIS query `SELECT ST_Distance(...)` returns plausible metre value | `PASS ✅` | `ST_Distance(a.location, b.location)` query returned 6178.7m, 7725.7m, 10883.9m across Austin, TX |
+| `pytest` covers model creation + geo query | `PASS ✅` | 9 passed in 7.26s (`test_health.py`, `test_models.py`, `test_geo.py`) |
+| Architecture & documentation updated | `PASS ✅` | Created `docs/schema.md` with Mermaid ER diagram and spatial query documentation |
+
+### PostGIS Geodesic Distance Verification (Austin, TX Pilot City)
+
+```sql
+SELECT a.address as donor_addr, b.address as recip_addr, ROUND(ST_Distance(a.location, b.location)::numeric, 1) as distance_meters 
+FROM donors a, recipients b LIMIT 5;
+```
+
+**Actual Output:**
+```text
+             donor_addr              |              recip_addr              | distance_meters 
+-------------------------------------+--------------------------------------+-----------------
+ 4001 N Lamar Blvd, Austin, TX 78756 | 6500 Metropolis Dr, Austin, TX 78744 |         10883.9
+ 525 N Lamar Blvd, Austin, TX 78703  | 6500 Metropolis Dr, Austin, TX 78744 |          7725.7
+ 1501 E 7th St, Austin, TX 78702     | 6500 Metropolis Dr, Austin, TX 78744 |          6178.7
+ 3414 Lyons Rd, Austin, TX 78702     | 6500 Metropolis Dr, Austin, TX 78744 |          7547.4
+ 4200 S Lamar Blvd, Austin, TX 78704 | 6500 Metropolis Dr, Austin, TX 78744 |          7277.6
+```
+
+### Automated Test Suite (`pytest tests/ -v`)
+
+```text
+tests/test_geo.py::test_postgis_st_distance_plausible_meters[asyncio] PASSED [ 11%]
+tests/test_geo.py::test_postgis_st_dwithin_radius_filter[asyncio] PASSED     [ 22%]
+tests/test_geo.py::test_postgis_raw_query[asyncio] PASSED                    [ 33%]
+tests/test_health.py::test_healthz_returns_200 PASSED                        [ 44%]
+tests/test_health.py::test_healthz_body PASSED                               [ 55%]
+tests/test_health.py::test_unknown_route_returns_404 PASSED                  [ 66%]
+tests/test_models.py::test_user_creation_and_query[asyncio] PASSED           [ 77%]
+tests/test_models.py::test_donor_and_recipient_creation[asyncio] PASSED      [ 88%]
+tests/test_models.py::test_donation_and_claim_lifecycle[asyncio] PASSED      [100%]
+============================== 9 passed in 7.26s ===============================
+```
 
 ---
 
@@ -142,4 +189,13 @@ Then share the output. If all pass → Phase 0 is `PASSED` → owner approves Ph
 
 | Phase | Status | Date | Notes |
 |---|---|---|---|
-| 0 | PASSED ✅ | 2026-10-11 | All health checks green. cors_origins bug fixed. |
+| 0 | PASSED ✅ | 2026-10-11 | All health checks green. cors_origins bug fixed. Git push issue resolved. |
+| 1 | PASSED ✅ | 2026-10-11 | Schema created, PostGIS migrations clean, idempotent seeding passed, 9/9 pytest passed. |
+
+---
+
+## Next action
+
+Phase 1 is complete and verified against all acceptance criteria.
+Awaiting owner review and explicit approval to proceed to:
+**Phase 2 — Authentication, roles, and the API skeleton** (Firebase Auth token verification, role guards, `/auth/session`, `/me` routes).
