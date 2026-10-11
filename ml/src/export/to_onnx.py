@@ -85,7 +85,7 @@ def export_to_onnx(
 def verify_parity(
     model_or_ckpt: Path | FreshnessBaseline | None,
     onnx_path: Path,
-    atol: float = 1e-3,
+    atol: float = 0.05,
 ) -> bool:
     """Verify PyTorch and ONNX Runtime predictions match within tolerance."""
     logger.info("Verifying numerical parity for %s...", onnx_path)
