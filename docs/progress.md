@@ -1,6 +1,6 @@
 # BountyLoop Implementation Progress
 
-## Current Phase: Phase 1 — Database Schema, PostGIS, Migrations, Seed Data
+## Current Phase: Phase 2 — Authentication, roles, and the API skeleton
 ## Status: `PASSED` ✅
 **Date:** 2026-10-11
 **Branch:** `main`
@@ -185,17 +185,93 @@ tests/test_models.py::test_donation_and_claim_lifecycle[asyncio] PASSED      [10
 
 ---
 
+## Phase 2 Progress — Authentication, Roles, and the API Skeleton
+
+### Acceptance Checklist & Verification
+
+| Criterion | Status | Evidence / Verification |
+|---|---|---|
+| Firebase Auth token verification | `PASS ✅` | `verify_firebase_token` with Firebase Admin SDK + fallback mock for test/dev |
+| User auto-provisioning on first sight | `PASS ✅` | New Firebase UID triggers auto-insert with default role `donor` and `is_new_user: true` |
+| Role-based access control (RBAC) | `PASS ✅` | `require_role(...)` dependency factory returns 403 Forbidden RFC-7807 for unpermitted roles |
+| Endpoints operational | `PASS ✅` | `POST /v1/auth/session`, `POST /v1/auth/role`, `GET /v1/me`, `PATCH /v1/me`, `POST /v1/me/role` |
+| RFC-7807 Problem Details | `PASS ✅` | Custom exception handlers for 401, 403, 404, 422 (`invalid_params`), and 500 errors |
+| In-memory rate limiting | `PASS ✅` | Configured `slowapi` limiter (60/min on auth endpoints) |
+| OpenAPI schema & documentation | `PASS ✅` | Clean OpenAPI 3.1 schema at `/openapi.json`, interactive `/docs`, and `docs/api.md` created |
+| Automated test suite (`pytest`) | `PASS ✅` | 17/17 passed in 4.63s (`test_auth.py`, `test_geo.py`, `test_health.py`, `test_models.py`) |
+| Code coverage | `PASS ✅` | **85%** total coverage across all modules (target ≥80%) |
+| Code quality (Ruff & Black) | `PASS ✅` | 100% clean, zero linter warnings or formatting issues |
+
+### Automated Test Suite Execution (`pytest tests/ -v`)
+
+```text
+tests/test_auth.py::test_unauthenticated_request_returns_401_problem_json[asyncio] PASSED [  5%]
+tests/test_auth.py::test_invalid_token_returns_401_problem_json[asyncio] PASSED           [ 11%]
+tests/test_auth.py::test_validation_error_returns_422_problem_json[asyncio] PASSED        [ 17%]
+tests/test_auth.py::test_auth_session_provisions_user_on_first_sight[asyncio] PASSED      [ 23%]
+tests/test_auth.py::test_get_me_and_patch_me[asyncio] PASSED                             [ 29%]
+tests/test_auth.py::test_update_my_role_onboarding[asyncio] PASSED                       [ 35%]
+tests/test_auth.py::test_role_guards_enforce_rbac[asyncio] PASSED                        [ 41%]
+tests/test_auth.py::test_openapi_docs_available[asyncio] PASSED                          [ 47%]
+tests/test_geo.py::test_postgis_st_distance_plausible_meters[asyncio] PASSED             [ 52%]
+tests/test_geo.py::test_postgis_st_dwithin_radius_filter[asyncio] PASSED                 [ 58%]
+tests/test_geo.py::test_postgis_raw_query[asyncio] PASSED                                [ 64%]
+tests/test_health.py::test_healthz_returns_200 PASSED                                    [ 70%]
+tests/test_health.py::test_healthz_body PASSED                                           [ 76%]
+tests/test_health.py::test_unknown_route_returns_404 PASSED                              [ 82%]
+tests/test_models.py::test_user_creation_and_query[asyncio] PASSED                       [ 88%]
+tests/test_models.py::test_donor_and_recipient_creation[asyncio] PASSED                  [ 94%]
+tests/test_models.py::test_donation_and_claim_lifecycle[asyncio] PASSED                  [100%]
+============================== 17 passed in 4.63s ==============================
+```
+
+### Coverage Report Summary (`pytest --cov=app`)
+
+```text
+Name                            Stmts   Miss  Cover
+---------------------------------------------------
+app/__init__.py                     0      0   100%
+app/api/v1/router.py                6      0   100%
+app/api/v1/routes/auth.py          41     20    51%
+app/api/v1/routes/users.py         44      6    86%
+app/core/__init__.py                0      0   100%
+app/core/config.py                 63      2    97%
+app/core/logging.py                39     15    62%
+app/core/security.py               80     28    65%
+app/db/base.py                     13      0   100%
+app/db/models/__init__.py          11      0   100%
+app/db/models/agent_event.py       20      1    95%
+app/db/models/claim.py             25      1    96%
+app/db/models/donation.py          32      1    97%
+app/db/models/donor.py             24      1    96%
+app/db/models/enums.py             63      0   100%
+app/db/models/impact.py            20      1    95%
+app/db/models/recipient.py         28      1    96%
+app/db/models/review_queue.py      23      1    96%
+app/db/models/user.py              25      1    96%
+app/db/session.py                  27     14    48%
+app/main.py                        53      8    85%
+app/schemas/__init__.py             3      0   100%
+app/schemas/common.py              22      1    95%
+app/schemas/user.py                31      0   100%
+---------------------------------------------------
+TOTAL                             693    102    85%
+```
+
+---
+
 ## Phase history
 
 | Phase | Status | Date | Notes |
 |---|---|---|---|
 | 0 | PASSED ✅ | 2026-10-11 | All health checks green. cors_origins bug fixed. Git push issue resolved. |
 | 1 | PASSED ✅ | 2026-10-11 | Schema created, PostGIS migrations clean, idempotent seeding passed, 9/9 pytest passed. |
+| 2 | PASSED ✅ | 2026-10-11 | Firebase auth verifier, auto-provisioning, RBAC, RFC-7807 problem+json, 17/17 tests passing (85% cov). |
 
 ---
 
 ## Next action
 
-Phase 1 is complete and verified against all acceptance criteria.
+Phase 2 is complete and verified against all acceptance criteria.
 Awaiting owner review and explicit approval to proceed to:
-**Phase 2 — Authentication, roles, and the API skeleton** (Firebase Auth token verification, role guards, `/auth/session`, `/me` routes).
+**Phase 3 — Computer Vision Core: Multi-Head Food Assessment Pipeline** (Dataset audit, baseline ViT/ResNet training, multi-task architecture, TorchScript/ONNX export, CV FastAPI microservice integration).

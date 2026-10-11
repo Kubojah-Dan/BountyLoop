@@ -11,15 +11,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy.pool import NullPool
 
 from app.core.config import get_settings
-from app.db.session import SyncSessionLocal
+from app.db.session import SyncSessionLocal, get_db
 from app.main import app
-
-
-@pytest.fixture
-async def client() -> AsyncClient:
-    """Async HTTP client wired to the FastAPI test app (no real server needed)."""
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
-        yield c
 
 
 @pytest.fixture
@@ -31,15 +24,30 @@ async def db_session() -> AsyncGenerator[AsyncSession, None]:
         poolclass=NullPool,
         future=True,
     )
-    async_session = async_sessionmaker(
+    session_factory = async_sessionmaker(
         bind=engine,
         class_=AsyncSession,
         expire_on_commit=False,
     )
-    async with async_session() as session:
+    async with session_factory() as session:
         yield session
 
     await engine.dispose()
+
+
+@pytest.fixture
+async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
+    """Async HTTP client wired to the FastAPI test app with overridden db dependency."""
+
+    async def _override_get_db() -> AsyncGenerator[AsyncSession, None]:
+        yield db_session
+
+    app.dependency_overrides[get_db] = _override_get_db
+    try:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
+            yield c
+    finally:
+        app.dependency_overrides.clear()
 
 
 @pytest.fixture
