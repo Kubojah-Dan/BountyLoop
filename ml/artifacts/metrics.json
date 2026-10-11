@@ -1,0 +1,10 @@
+{
+  "model": "EfficientNet-B0 Binary Freshness",
+  "epochs_trained": 10,
+  "test_accuracy": 0.8294,
+  "test_macro_f1": 0.8292,
+  "classes": [
+    "fresh",
+    "spoiled"
+  ]
+}

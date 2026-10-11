@@ -9,9 +9,9 @@ from __future__ import annotations
 import os
 from logging.config import fileConfig
 
-from alembic import context
 from sqlalchemy import engine_from_config, pool
 
+from alembic import context
 from app.core.config import get_settings
 from app.db.models import Base
 
@@ -39,9 +39,7 @@ POSTGIS_INTERNAL_TABLES = {
 
 def include_object(object_, name, type_, reflected, compare_to):
     """Filter out PostGIS system tables and internal objects."""
-    if type_ == "table" and name in POSTGIS_INTERNAL_TABLES:
-        return False
-    return True
+    return not (type_ == "table" and name in POSTGIS_INTERNAL_TABLES)
 
 
 def get_sync_url() -> str:

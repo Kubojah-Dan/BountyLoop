@@ -1,7 +1,7 @@
 # BountyLoop Implementation Progress
 
 ## Current Phase: Phase 3 — CV service: data pipeline, freshness baseline, real /predict
-## Status: `WAITING_FOR_OWNER_RUN` ⏳
+## Status: `PASSED` ✅
 **Date:** 2026-10-11
 **Branch:** `main`
 
@@ -305,19 +305,16 @@ tests/test_preprocess.py::test_preprocess_image_with_tta PASSED          [100%]
 | 0 | PASSED ✅ | 2026-10-11 | All health checks green. cors_origins bug fixed. Git push issue resolved. |
 | 1 | PASSED ✅ | 2026-10-11 | Schema created, PostGIS migrations clean, idempotent seeding passed, 9/9 pytest passed. |
 | 2 | PASSED ✅ | 2026-10-11 | Firebase auth verifier, auto-provisioning, RBAC, RFC-7807 problem+json, 17/17 tests passing (85% cov). |
-| 3 | WAITING_FOR_OWNER_RUN ⏳ | 2026-10-11 | Data audit complete (docs/datasets.md), splits generated, ONNX export/parity verified, CV service running real /predict (11/11 tests pass). Ready for Colab GPU training run. |
+| 3 | PASSED ✅ | 2026-10-11 | Data audit complete (docs/datasets.md), reproducible splits, trained on Tesla T4 GPU in Colab (82.94% acc, 0.8292 macro-F1), ONNX exported & parity verified, CV service running real /predict, 28/28 tests passing across stack. |
 
 ---
 
-## Next action (Owner Action Item)
+## Next action (Phase 4 Gate)
 
-Run `ml/notebooks/01_freshness_baseline.ipynb` in Google Colab connected to GPU:
-1. Connect to Colab runtime (T4 GPU recommended).
-2. Run cells to mount Google Drive (`MyDrive/BountyLoop-ML/`).
-3. Model trains for 10 epochs with early stopping on val macro-F1.
-4. Outputs will be saved to:
-   - `MyDrive/BountyLoop-ML/checkpoints/best.pt`
-   - `MyDrive/BountyLoop-ML/metrics/metrics.json`
-   - `MyDrive/BountyLoop-ML/models/freshness_v1.onnx`
-5. Copy or download the generated `freshness_v1.onnx` to `ml/artifacts/freshness_v1.onnx` when training completes.
+Owner authorization required to proceed to **Phase 4: Advanced CV Pipeline**:
+- Food-101 item classifier (101 classes $\rightarrow$ 12 rescue categories)
+- 4-level freshness grader (`fresh`, `nearing_expiry`, `critical`, `spoiled`)
+- Binary hazard gate (`safe` vs `contaminated/spoiled`)
+- Cascade orchestrator pipeline (`cv_service/app/cascade.py`)
+- Automated review queue triggers on low confidence / hazard detection
 
