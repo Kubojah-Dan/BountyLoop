@@ -1,0 +1,1 @@
+"""CV service app package."""

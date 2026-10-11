@@ -1,0 +1,22 @@
+name: ML Nightly Evaluation
+
+on:
+  schedule:
+    # Run nightly at 02:00 UTC
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+# Nightly ML evaluation — activated in Phase 3 when first model artefacts are committed.
+# Fails if macro-F1 regresses more than 2 points from the recorded baseline.
+
+jobs:
+  evaluate-placeholder:
+    name: ML evaluation (Phase 3+)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Placeholder
+        run: |
+          echo "ML nightly evaluation will be activated in Phase 3."
+          echo "Will evaluate: freshness (macro-F1), item (top-1), hazard (recall)."
+          echo "Fails if any metric regresses > 2 points from recorded baseline."

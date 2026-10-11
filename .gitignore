@@ -1,0 +1,105 @@
+# ── Secrets & environment ──────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+firebase_options.dart
+google-services.json
+GoogleService-Info.plist
+service_account.json
+kaggle.json
+
+# ── Python ─────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+*.egg
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.so
+
+# ── ML data — never commit raw or processed datasets ──────────────────────────
+ml/data/raw/
+ml/data/processed/
+ml/data/custom/
+ml/data/food101/
+ml/data/freshness/
+ml/data/fruitvision/
+ml/data/
+*.h5
+*.hdf5
+# Allow placeholder .gitkeep files
+!ml/data/raw/.gitkeep
+!ml/data/processed/.gitkeep
+!ml/data/custom/.gitkeep
+!ml/data/**/.gitkeep
+
+# ML artifacts — use Git LFS or DVC for large files
+ml/artifacts/**/*.onnx
+ml/artifacts/**/*.pt
+ml/artifacts/**/*.pkl
+# Keep metrics.json and model cards committed (small, text)
+!ml/artifacts/**/*.json
+!ml/artifacts/**/*.yaml
+!ml/artifacts/**/*.md
+
+# Storage (uploaded photos)
+storage/
+
+# ── Node / dashboard ──────────────────────────────────────────────────────────
+node_modules/
+dashboard/dist/
+dashboard/.vite/
+*.tsbuildinfo
+.next/
+
+# ── Flutter / mobile ──────────────────────────────────────────────────────────
+mobile/.dart_tool/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/build/
+mobile/android/.gradle/
+mobile/android/local.properties
+mobile/android/app/google-services.json
+mobile/ios/Pods/
+mobile/ios/.symlinks/
+mobile/ios/Flutter/Flutter.framework
+mobile/ios/Flutter/Flutter.podspec
+mobile/.packages
+
+# ── Docker ────────────────────────────────────────────────────────────────────
+*.tar
+docker-compose.override.yml
+
+# ── OS ────────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+.idea/
+.vscode/settings.json
+
+# ── Logs ──────────────────────────────────────────────────────────────────────
+*.log
+logs/
+
+# ── Temporary ─────────────────────────────────────────────────────────────────
+*.tmp
+*.bak
+BountyLoop_AI_Agent_Phasewise_Prompt.md
+BountyLoop_Master_Plan.md
+BountyLoop-logo-wordmark.png
+BountyLoop-logo.png

@@ -1,0 +1,20 @@
+name: Deploy
+
+on:
+  push:
+    branches: ["main"]
+
+# Placeholder deploy workflow — activated in Phase 13
+# This file is committed now so CI/CD configuration is version-controlled from Day 1.
+# Each service block will be filled in Phase 13 after free-tier accounts are confirmed.
+
+jobs:
+  deploy-placeholder:
+    name: Deployment pipeline (Phase 13)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Placeholder
+        run: |
+          echo "Deployment pipeline will be activated in Phase 13."
+          echo "Target services: Render (API + CV + MCP), Vercel (dashboard), Neon (DB)."

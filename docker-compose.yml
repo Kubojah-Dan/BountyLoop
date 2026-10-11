@@ -1,0 +1,124 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# BountyLoop — docker-compose.yml
+# Services: db (PostGIS 16-3.4), api (FastAPI), cv (ONNX inference)
+# Phase 7 adds: osrm (commented until then)
+# Phase 9 adds: nominatim (commented until then)
+# ─────────────────────────────────────────────────────────────────────────────
+services:
+
+  # ── PostgreSQL 16 + PostGIS 3.4 ───────────────────────────────────────────
+  db:
+    image: postgis/postgis:16-3.4
+    container_name: bountyloop_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-bountyloop}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_DB: ${POSTGRES_DB:-bountyloop}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-bountyloop} -d ${POSTGRES_DB:-bountyloop}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # ── FastAPI backend ────────────────────────────────────────────────────────
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: bountyloop_api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      APP_ENV: ${APP_ENV:-development}
+      APP_VERSION: ${APP_VERSION:-0.1.0}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://bountyloop:changeme@db:5432/bountyloop}
+      DATABASE_URL_SYNC: ${DATABASE_URL_SYNC:-postgresql+psycopg://bountyloop:changeme@db:5432/bountyloop}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://localhost:3000}
+      CV_SERVICE_URL: ${CV_SERVICE_URL:-http://cv:8001}
+      CV_TIMEOUT_SECONDS: ${CV_TIMEOUT_SECONDS:-10}
+      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID:-}
+      FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL:-}
+      FIREBASE_PRIVATE_KEY: ${FIREBASE_PRIVATE_KEY:-}
+      RATE_LIMIT_PER_MINUTE: ${RATE_LIMIT_PER_MINUTE:-60}
+      AGENT_ENABLED: ${AGENT_ENABLED:-false}
+      SMS_DAILY_CAP: ${SMS_DAILY_CAP:-20}
+      OSRM_URL: ${OSRM_URL:-http://osrm:5000}
+      OSRM_FALLBACK_TO_ESTIMATE: ${OSRM_FALLBACK_TO_ESTIMATE:-true}
+      MEAL_KG_FACTOR: ${MEAL_KG_FACTOR:-1.2}
+      IMPACT_CO2E_FACTOR: ${IMPACT_CO2E_FACTOR:-2.5}
+      MAX_RADIUS_KM: ${MAX_RADIUS_KM:-15.0}
+      MAX_CONSECUTIVE_WINS: ${MAX_CONSECUTIVE_WINS:-3}
+      OFFER_TTL_MINUTES: ${OFFER_TTL_MINUTES:-30}
+      MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-10}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./storage:/app/storage
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8000/healthz || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  # ── CV inference service (ONNX) ────────────────────────────────────────────
+  cv:
+    build:
+      context: ./cv_service
+      dockerfile: Dockerfile
+    container_name: bountyloop_cv
+    restart: unless-stopped
+    environment:
+      APP_ENV: ${APP_ENV:-development}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      AUTO_CONF: ${AUTO_CONF:-0.90}
+      CONFIRM_CONF: ${CONFIRM_CONF:-0.60}
+      HAZARD_FORCES_REVIEW: ${HAZARD_FORCES_REVIEW:-true}
+      MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-10}
+      TTA: ${TTA:-true}
+    ports:
+      - "8001:8001"
+    volumes:
+      # Models are mounted read-only from ml/artifacts
+      - ./ml/artifacts:/app/models:ro
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8001/healthz || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  # ── OSRM self-hosted routing (Phase 7) — commented until then ─────────────
+  # osrm:
+  #   image: osrm/osrm-backend:latest
+  #   container_name: bountyloop_osrm
+  #   restart: unless-stopped
+  #   ports:
+  #     - "5000:5000"
+  #   volumes:
+  #     - ./infra/osrm/data:/data
+  #   command: osrm-routed --algorithm mld /data/city.osrm
+  #   # See infra/osrm/README.md for the extract + contract steps
+
+  # ── Nominatim geocoder (Phase 9) — commented until then ──────────────────
+  # nominatim:
+  #   image: mediagis/nominatim:4.4
+  #   container_name: bountyloop_nominatim
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8080:8080"
+  #   volumes:
+  #     - ./infra/nominatim/data:/nominatim/data
+
+volumes:
+  pgdata:
+    name: bountyloop_pgdata
