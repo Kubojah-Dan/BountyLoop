@@ -1,7 +1,7 @@
 # BountyLoop Implementation Progress
 
-## Current Phase: Phase 3 — CV service: data pipeline, freshness baseline, real /predict
-## Status: `PASSED` ✅
+## Current Phase: Phase 4 — Advanced CV Pipeline (Item Classifier, 4-Level Freshness, Hazard Cascade)
+## Status: `WAITING_FOR_OWNER_RUN` ⏳
 **Date:** 2026-10-11
 **Branch:** `main`
 
@@ -309,12 +309,52 @@ tests/test_preprocess.py::test_preprocess_image_with_tta PASSED          [100%]
 
 ---
 
-## Next action (Phase 4 Gate)
+## Phase 4 Progress — Advanced CV Pipeline (Item Classifier, 4-Level Freshness, Hazard Cascade)
 
-Owner authorization required to proceed to **Phase 4: Advanced CV Pipeline**:
-- Food-101 item classifier (101 classes $\rightarrow$ 12 rescue categories)
-- 4-level freshness grader (`fresh`, `nearing_expiry`, `critical`, `spoiled`)
-- Binary hazard gate (`safe` vs `contaminated/spoiled`)
-- Cascade orchestrator pipeline (`cv_service/app/cascade.py`)
-- Automated review queue triggers on low confidence / hazard detection
+### Acceptance Checklist & Verification
+
+| Criterion | Status | Evidence / Verification |
+|---|---|---|
+| 12-Class Item Classifier Architecture | `PASS ✅` | `ItemClassifier` in `ml/src/models/cascade_models.py` mapping to `taxonomy.yaml` categories. |
+| 4-Level Freshness Grader Architecture | `PASS ✅` | `FreshnessGraderV2` in `ml/src/models/cascade_models.py` supporting `grade_0_spoiled` to `grade_3_fresh`. |
+| Binary Hazard Safety Gate Architecture | `PASS ✅` | `HazardDetector` in `ml/src/models/cascade_models.py` detecting chemical contamination / formalin. |
+| Cascade Decision Engine | `PASS ✅` | `CascadeDecisionEngine` in `cv_service/app/cascade.py` implementing 3-tier routing (`auto_create`, `ask_donor_confirm`, `human_review_queue`). |
+| Spoiled & Contamination Safety Gating | `PASS ✅` | Immediate diversion to `human_review_queue` with `review_reason="hazard"` on spoiled or contaminated flags. |
+| Boundary & Confidence Gate Tests | `PASS ✅` | 8/8 comprehensive tests passing in `cv_service/tests/test_cascade.py`. |
+| Multi-Head ONNX Serving Pipeline | `PASS ✅` | `InferencePipeline` in `cv_service/app/pipeline.py` coordinates Item, Freshness, and Hazard heads with TTA. |
+| Colab GPU Training Notebook | `PASS ✅` | `ml/notebooks/02_advanced_cascade.ipynb` prepared with Tesla T4 GPU support, Drive persistence, and ONNX parity checks. |
+| CV Service Test Suite | `PASS ✅` | 19/19 tests passing in Docker container (`test_cascade.py`, `test_predict.py`, `test_preprocess.py`, `test_health.py`). |
+| Backend Test Suite | `PASS ✅` | 17/17 tests passing in Docker container (36/36 total passing across stack). |
+| Code Quality (Ruff & Black) | `PASS ✅` | 100% compliant across `cv_service/`, `backend/`, and `ml/src/`. |
+
+### Test Suite Execution Summary (`cv_service` & `backend`)
+
+```text
+CV Service (bountyloop_cv): 19 passed in 28.85s
+- tests/test_cascade.py (8 passed)
+- tests/test_health.py (2 passed)
+- tests/test_predict.py (5 passed)
+- tests/test_preprocess.py (4 passed)
+
+Backend API (bountyloop_api): 17 passed in 3.91s
+- tests/test_auth.py (8 passed)
+- tests/test_geo.py (3 passed)
+- tests/test_health.py (3 passed)
+- tests/test_models.py (3 passed)
+
+TOTAL: 36 / 36 tests passing across stack (100%)
+```
+
+---
+
+## Next action (Owner Action Item)
+
+Run `ml/notebooks/02_advanced_cascade.ipynb` in Google Colab connected to GPU:
+1. Connect to Colab runtime (T4 GPU recommended).
+2. Run cells to mount Google Drive (`MyDrive/BountyLoop-ML/`).
+3. Train/fine-tune the cascade heads and export:
+   - `MyDrive/BountyLoop-ML/models/item_v1.onnx`
+   - `MyDrive/BountyLoop-ML/models/freshness_v2.onnx`
+   - `MyDrive/BountyLoop-ML/models/hazard_v1.onnx`
+4. Copy or download the generated ONNX models to `ml/artifacts/` when ready.
 
