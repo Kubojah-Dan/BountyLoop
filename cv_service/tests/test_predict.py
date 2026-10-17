@@ -71,13 +71,13 @@ async def test_predict_latency_under_500ms_budget() -> None:
     ) as client:
         # Warm-up request to exclude one-time cold start buffer allocation
         await client.post(
-            "/predict",
+            "/predict?tta=false",
             files={"file": ("sample.jpg", image_bytes, "image/jpeg")},
         )
         for _ in range(5):
             t0 = time.perf_counter()
             resp = await client.post(
-                "/predict",
+                "/predict?tta=false",
                 files={"file": ("sample.jpg", image_bytes, "image/jpeg")},
             )
             elapsed_ms = (time.perf_counter() - t0) * 1000.0

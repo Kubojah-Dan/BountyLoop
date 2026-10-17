@@ -63,6 +63,9 @@ ml/artifacts/**/*.pkl
 
 # Storage (uploaded photos)
 storage/
+**/storage/
+backend/storage/
+backend/ml/
 
 # ── Node / dashboard ──────────────────────────────────────────────────────────
 node_modules/

@@ -33,9 +33,9 @@ async def test_postgis_st_distance_plausible_meters(db_session: AsyncSession) ->
     for row in rows:
         distance = float(row.distance_m)
         # Distances within Austin metro area should be between 500m and 35,000m (0.5km to 35km)
-        assert (
-            500.0 < distance < 35000.0
-        ), f"Distance {distance}m between {row.donor_addr} and {row.recip_addr} is out of expected city range"
+        assert 500.0 < distance < 35000.0, (
+            f"Distance {distance}m between {row.donor_addr} and {row.recip_addr} is out of expected city range"
+        )
 
 
 @pytest.mark.anyio
@@ -57,9 +57,9 @@ async def test_postgis_st_dwithin_radius_filter(db_session: AsyncSession) -> Non
     recipients_within_25k = (await db_session.execute(query_25k)).scalars().all()
 
     assert len(recipients_within_10k) > 0, "Expected at least one recipient within 10km"
-    assert len(recipients_within_25k) >= len(
-        recipients_within_10k
-    ), "Larger radius must include equal or more recipients"
+    assert len(recipients_within_25k) >= len(recipients_within_10k), (
+        "Larger radius must include equal or more recipients"
+    )
 
 
 @pytest.mark.anyio

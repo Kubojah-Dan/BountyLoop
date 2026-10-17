@@ -39,6 +39,7 @@ dependencies = [
     "slowapi>=0.1.9",
 
     # Utilities
+    "pillow>=10.4.0",
     "python-jose[cryptography]>=3.3.0",
     "passlib[bcrypt]>=1.7.4",
     "python-dateutil>=2.9.0",

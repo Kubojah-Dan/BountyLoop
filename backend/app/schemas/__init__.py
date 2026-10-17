@@ -1,6 +1,12 @@
 """BountyLoop — Pydantic schemas package."""
 
 from app.schemas.common import PaginatedResponse, PaginationParams, ProblemDetails
+from app.schemas.donation import (
+    DonationConfirm,
+    DonationRead,
+    ReviewQueueRead,
+    ReviewResolve,
+)
 from app.schemas.user import (
     RoleUpdateRequest,
     SessionCreate,
@@ -20,4 +26,8 @@ __all__ = [
     "RoleUpdateRequest",
     "SessionCreate",
     "SessionResponse",
+    "DonationRead",
+    "DonationConfirm",
+    "ReviewQueueRead",
+    "ReviewResolve",
 ]

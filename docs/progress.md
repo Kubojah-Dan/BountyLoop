@@ -1,8 +1,8 @@
 # BountyLoop Implementation Progress
 
-## Current Phase: Phase 4 — Advanced CV Pipeline (Item Classifier, 4-Level Freshness, Hazard Cascade)
-## Status: `WAITING_FOR_OWNER_RUN` ⏳
-**Date:** 2026-10-11
+## Current Phase: Phase 5 — Donation API (Photo-to-Donate flow & Review Queue)
+## Status: PHASE_COMPLETE ✅
+**Date:** 2026-10-17
 **Branch:** `main`
 
 ---
@@ -306,6 +306,8 @@ tests/test_preprocess.py::test_preprocess_image_with_tta PASSED          [100%]
 | 1 | PASSED ✅ | 2026-10-11 | Schema created, PostGIS migrations clean, idempotent seeding passed, 9/9 pytest passed. |
 | 2 | PASSED ✅ | 2026-10-11 | Firebase auth verifier, auto-provisioning, RBAC, RFC-7807 problem+json, 17/17 tests passing (85% cov). |
 | 3 | PASSED ✅ | 2026-10-11 | Data audit complete (docs/datasets.md), reproducible splits, trained on Tesla T4 GPU in Colab (82.94% acc, 0.8292 macro-F1), ONNX exported & parity verified, CV service running real /predict, 28/28 tests passing across stack. |
+| 4 | PASSED ✅ | 2026-10-17 | 3-head cascade architecture trained in Colab, exported to ONNX (item_v1, freshness_v2, hazard_v1) and placed in ml/artifacts subfolders. 19/19 CV tests passing. |
+| 5 | PASSED ✅ | 2026-10-17 | Donation API (Photo-to-Donate flow & Review Queue). Pillow EXIF sanitization, SHA-256 deduplication, CV offline circuit breaker, shelf-life rules, impact calculations, active learning store, WebSocket broadcast, RBAC review queue triage. 40/40 backend tests passing, 59/59 total stack tests. |
 
 ---
 
@@ -321,40 +323,64 @@ tests/test_preprocess.py::test_preprocess_image_with_tta PASSED          [100%]
 | Cascade Decision Engine | `PASS ✅` | `CascadeDecisionEngine` in `cv_service/app/cascade.py` implementing 3-tier routing (`auto_create`, `ask_donor_confirm`, `human_review_queue`). |
 | Spoiled & Contamination Safety Gating | `PASS ✅` | Immediate diversion to `human_review_queue` with `review_reason="hazard"` on spoiled or contaminated flags. |
 | Boundary & Confidence Gate Tests | `PASS ✅` | 8/8 comprehensive tests passing in `cv_service/tests/test_cascade.py`. |
-| Multi-Head ONNX Serving Pipeline | `PASS ✅` | `InferencePipeline` in `cv_service/app/pipeline.py` coordinates Item, Freshness, and Hazard heads with TTA. |
-| Colab GPU Training Notebook | `PASS ✅` | `ml/notebooks/02_advanced_cascade.ipynb` prepared with Tesla T4 GPU support, Drive persistence, and ONNX parity checks. |
+| Multi-Head ONNX Serving Pipeline | `PASS ✅` | `InferencePipeline` in `cv_service/app/pipeline.py` coordinates Item, Freshness, and Hazard heads with TTA. Subfolder model loading supported. |
+| Colab GPU Training Notebook | `PASS ✅` | `ml/notebooks/02_advanced_cascade.ipynb` executed on Tesla T4 GPU with exported models `item_v1.onnx`, `freshness_v2.onnx`, and `hazard_v1.onnx`. |
+| Model Storage Parity | `PASS ✅` | Models organized in `ml/artifacts/item/`, `ml/artifacts/freshness/`, and `ml/artifacts/hazard/`. |
 | CV Service Test Suite | `PASS ✅` | 19/19 tests passing in Docker container (`test_cascade.py`, `test_predict.py`, `test_preprocess.py`, `test_health.py`). |
-| Backend Test Suite | `PASS ✅` | 17/17 tests passing in Docker container (36/36 total passing across stack). |
-| Code Quality (Ruff & Black) | `PASS ✅` | 100% compliant across `cv_service/`, `backend/`, and `ml/src/`. |
 
-### Test Suite Execution Summary (`cv_service` & `backend`)
+---
+
+## Phase 5 Progress — Donation API (Photo-to-Donate Flow & Review Queue)
+
+### Acceptance Checklist & Verification
+
+| Criterion | Status | Evidence / Verification |
+|---|---|---|
+| Photo-to-Donate Upload Endpoint | `PASS ✅` | `POST /v1/donations` supports 1-3 photos, validates sizes, transposes orientation, creates draft donation. |
+| Server-Side EXIF Stripping | `PASS ✅` | `sanitize_and_hash_image` in `storage.py` strips all EXIF/GPS tags before storing to disk using fresh RGB buffer. |
+| SHA-256 Deduplication | `PASS ✅` | Hash of cleaned JPEG stored in memory cache; identical consecutive uploads rejected with 409 Conflict. |
+| Asynchronous CV Client & Circuit Breaker | `PASS ✅` | `CVClient` in `cv_client.py` uses 10s timeout, 1 retry, and offline fallback flagging `needs_review=True` without dropping donations. |
+| Deterministic Shelf-Life & Expiry Rules | `PASS ✅` | `calculate_expiry` in `freshness_rules.py` maps all 12 categories × freshness grades to exact UTC spoilage deadlines. |
+| Environmental & Social Impact Metrics | `PASS ✅` | `meals_equivalent(kg)` (1.2 kg/meal) and `co2e_avoided(kg)` (2.5 kg/kg factor) in `impact.py` with UNVERIFIED disclosure flag. |
+| Active Learning Retraining Store | `PASS ✅` | `append_label_record` in `label_store.py` logs donor corrections and operator triage adjudication to `ml/data/custom/labels.csv`. |
+| Real-time WebSocket Live Feed | `PASS ✅` | `WebSocketManager` and `/v1/ws/donations` broadcasts `donation_created`, `donation_confirmed`, `donation_cancelled`, and `review_resolved` events. |
+| Human Review Queue Triage | `PASS ✅` | `GET /v1/review-queue` lists pending/resolved items ordered by `created_at DESC` with eager-loaded donor/donation context. |
+| Operator Adjudication Endpoint | `PASS ✅` | `POST /v1/review-queue/{id}/resolve` applies category/freshness/weight overrides, approves for dispatch, updates review status. |
+| RBAC Role Guards | `PASS ✅` | Review queue endpoints strictly restricted to Admin and Volunteer roles (403 for donors/recipients, 401 for anonymous). |
+| Backend Test Suite | `PASS ✅` | 40/40 tests passing in `bountyloop_api` container (`test_donations.py`, `test_review_queue.py`, `test_storage.py`, `test_freshness_rules.py`, `test_impact.py`, etc.). |
+| Full Stack Test Verification | `PASS ✅` | 59/59 total tests passing across `bountyloop_api` (40) and `bountyloop_cv` (19). |
+| Code Quality & Formatting | `PASS ✅` | Ruff check and format pass with zero errors across the backend. |
+
+### Test Suite Execution Summary (`bountyloop_api` & `bountyloop_cv`)
 
 ```text
-CV Service (bountyloop_cv): 19 passed in 28.85s
+Backend API (bountyloop_api): 40 passed in 9.36s
+- tests/test_auth.py (8 passed)
+- tests/test_donations.py (6 passed)
+- tests/test_freshness_rules.py (6 passed)
+- tests/test_geo.py (3 passed)
+- tests/test_health.py (3 passed)
+- tests/test_impact.py (4 passed)
+- tests/test_models.py (3 passed)
+- tests/test_review_queue.py (2 passed)
+- tests/test_storage.py (5 passed)
+
+CV Service (bountyloop_cv): 19 passed in 8.08s
 - tests/test_cascade.py (8 passed)
 - tests/test_health.py (2 passed)
 - tests/test_predict.py (5 passed)
 - tests/test_preprocess.py (4 passed)
 
-Backend API (bountyloop_api): 17 passed in 3.91s
-- tests/test_auth.py (8 passed)
-- tests/test_geo.py (3 passed)
-- tests/test_health.py (3 passed)
-- tests/test_models.py (3 passed)
-
-TOTAL: 36 / 36 tests passing across stack (100%)
+TOTAL: 59 / 59 tests passing across stack (100%)
 ```
 
 ---
 
-## Next action (Owner Action Item)
+## Next Phase: Phase 6 — Flutter Mobile App (Donor & Recipient Flows)
 
-Run `ml/notebooks/02_advanced_cascade.ipynb` in Google Colab connected to GPU:
-1. Connect to Colab runtime (T4 GPU recommended).
-2. Run cells to mount Google Drive (`MyDrive/BountyLoop-ML/`).
-3. Train/fine-tune the cascade heads and export:
-   - `MyDrive/BountyLoop-ML/models/item_v1.onnx`
-   - `MyDrive/BountyLoop-ML/models/freshness_v2.onnx`
-   - `MyDrive/BountyLoop-ML/models/hazard_v1.onnx`
-4. Copy or download the generated ONNX models to `ml/artifacts/` when ready.
+1. Flutter environment verification & configuration (`flutter doctor`).
+2. Authentication & profile setup (Firebase integration).
+3. Donor flow: Camera photo capture, quick crop, live CV inference result preview, confirmation & correction screen.
+4. Recipient flow: Browse nearby open donations, map & distance list, reserve/claim flow.
+5. Review queue operator UI: Volunteer/Admin triage interface.
 
