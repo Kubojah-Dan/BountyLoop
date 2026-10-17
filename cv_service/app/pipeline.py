@@ -105,14 +105,20 @@ class InferencePipeline:
             providers=["CPUExecutionProvider"],
         )
 
-    def _resolve_model_path(self, filename: str) -> Path | None:
-        """Locate model in configured models_dir or local repository artifacts."""
-        path = self.models_dir / filename
-        if path.exists():
-            return path
-        alt_path = Path("ml/artifacts") / filename
-        if alt_path.exists():
-            return alt_path
+    def _resolve_model_path(
+        self, filename: str, subfolder: str | None = None
+    ) -> Path | None:
+        """Locate model in configured models_dir or local repository artifacts (supports both subfolder and root)."""
+        candidates: list[Path] = []
+        if subfolder:
+            candidates.append(self.models_dir / subfolder / filename)
+            candidates.append(Path("ml/artifacts") / subfolder / filename)
+        candidates.append(self.models_dir / filename)
+        candidates.append(Path("ml/artifacts") / filename)
+
+        for p in candidates:
+            if p.exists():
+                return p
         return None
 
     def _load_models(self) -> None:
@@ -120,8 +126,12 @@ class InferencePipeline:
         logger.info("Scanning models directory: %s", self.models_dir)
 
         # 1. Freshness Head (v2 preferred, v1 fallback)
-        freshness_v2_path = self._resolve_model_path("freshness_v2.onnx")
-        freshness_v1_path = self._resolve_model_path("freshness_v1.onnx")
+        freshness_v2_path = self._resolve_model_path(
+            "freshness_v2.onnx", subfolder="freshness"
+        )
+        freshness_v1_path = self._resolve_model_path(
+            "freshness_v1.onnx", subfolder="freshness"
+        )
 
         if freshness_v2_path and freshness_v2_path.exists():
             try:
@@ -150,7 +160,7 @@ class InferencePipeline:
                 logger.error("Failed loading freshness_v1: %s", e)
 
         # 2. Item Classifier Head
-        item_path = self._resolve_model_path("item_v1.onnx")
+        item_path = self._resolve_model_path("item_v1.onnx", subfolder="item")
         if item_path and item_path.exists():
             try:
                 self.sessions["item"] = self._init_session(item_path)
@@ -160,7 +170,7 @@ class InferencePipeline:
                 logger.error("Failed loading item_v1: %s", e)
 
         # 3. Hazard Detector Head
-        hazard_path = self._resolve_model_path("hazard_v1.onnx")
+        hazard_path = self._resolve_model_path("hazard_v1.onnx", subfolder="hazard")
         if hazard_path and hazard_path.exists():
             try:
                 self.sessions["hazard"] = self._init_session(hazard_path)
