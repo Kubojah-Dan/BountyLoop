@@ -1,5 +1,11 @@
 """BountyLoop — Pydantic schemas package."""
 
+from app.schemas.agent import (
+    AgentEventRead,
+    AgentRunRequest,
+    AgentRunResponse,
+    AgentStepTrace,
+)
 from app.schemas.claim import (
     ClaimCreate,
     ClaimDecline,
@@ -44,4 +50,8 @@ __all__ = [
     "ClaimDecline",
     "ClaimPickup",
     "ClaimRead",
+    "AgentRunRequest",
+    "AgentRunResponse",
+    "AgentStepTrace",
+    "AgentEventRead",
 ]

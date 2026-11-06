@@ -1,6 +1,6 @@
 # BountyLoop Implementation Progress
 
-## Current Phase: Phase 7 — Recipient Matching Engine, Routing & Optimization
+## Current Phase: Phase 8 — Autonomous Matching & Rescue Agent (Claude / smolagents)
 ## Status: PHASE_COMPLETE ✅
 **Date:** 2026-11-06
 **Branch:** `main`
@@ -460,11 +460,55 @@ flutter analyze: No issues found!
 
 ---
 
-## Next Phase: Phase 8 — Autonomous Matching & Rescue Agent (Claude / smolagents)
+## Phase 8 Progress — Autonomous Matching & Rescue Agent (Claude / smolagents)
 
-1. `backend/app/agent/`: Autonomous food rescue coordinator using Claude 3.5 Sonnet / smolagents.
-2. Tool suite: `search_candidates`, `propose_match`, `rebalance_distribution`, `log_agent_event`.
-3. Multi-turn reasoning loops with ReAct pattern and safety sandboxing.
-4. Autonomous claim creation, auto-acceptance under high confidence, and human escalation fallback.
+### Acceptance Checklist & Verification
+
+| Criterion | Status | Evidence / Verification |
+|---|---|---|
+| ReAct Multi-Turn Reasoning Loop | `PASS ✅` | Implemented `AutonomousRescueAgent` in `backend/app/agent/coordinator.py` following ReAct pattern (`Thought`, `Action`, `Observation`, `Final Decision`). |
+| Sandboxed Tool Suite | `PASS ✅` | Implemented in `backend/app/agent/tools.py`: `search_candidates`, `rebalance_distribution`, `propose_match`, `escalate_to_human`, and `log_agent_event`. Verified in `test_agent.py`. |
+| Confidence Threshold & Auto-Acceptance | `PASS ✅` | When match confidence >= `auto_accept_threshold` (default 80.0), autonomously creates `Claim` in `accepted` status and transitions donation to `matched`. When confidence is lower, proposes `offered` claim for recipient confirmation. |
+| Safety & Contamination Gate | `PASS ✅` | Non-zero hazard flags (`suspected_contamination_or_formalin`) immediately halt matching, log `hazard_escalated` event, and route to human review queue (`test_agent_hazard_flag_triggers_safety_escalation`). |
+| Fallback & Human Escalation | `PASS ✅` | When no candidates meet spatial/dietary/capacity constraints, escalates to human review queue with `ReviewReason.ambiguous_match` (`test_agent_no_candidates_fallback_escalation`). |
+| Pluggable LLM Interface | `PASS ✅` | `backend/app/agent/llm_client.py` supports live Anthropic Claude 3.5 Sonnet, OpenAI GPT-4o, and deterministic local runner for offline/testing reproducibility without API key dependencies. |
+| Auditable Event Persistence | `PASS ✅` | All decisions, reasoning traces, tool inputs/outputs, model info, and latency are logged to PostgreSQL `agent_events` table. |
+| REST API Endpoints | `PASS ✅` | Implemented in `backend/app/api/v1/routes/agent.py`: `POST /v1/agent/run` (live orchestration), `POST /v1/agent/evaluate` (dry-run simulation), and `GET /v1/agent/events` (paginated audit trail). |
+| Backend Pytest Suite | `PASS ✅` | 61/61 tests passing across backend suite (including 10/10 dedicated agent tests in `test_agent.py`). |
+| Flutter App Suite & Analysis | `PASS ✅` | 10/10 tests passing in `mobile/test/`; `flutter analyze` reports 0 issues. |
+| Code Quality | `PASS ✅` | `ruff check` and `ruff format` clean with 0 warnings or errors across the backend codebase. |
+
+### Backend Test Suite Execution Summary (`docker exec bountyloop_api pytest tests/ -q`)
+
+```text
+.............................................................            [100%]
+61 passed in 22.68s
+```
+
+### Agent Test Suite Execution Summary (`tests/test_agent.py`)
+
+```text
+tests/test_agent.py::test_agent_tool_search_candidates PASSED            [ 10%]
+tests/test_agent.py::test_agent_tool_rebalance_distribution PASSED       [ 20%]
+tests/test_agent.py::test_agent_tool_propose_match_and_auto_accept PASSED [ 30%]
+tests/test_agent.py::test_agent_tool_escalate_to_human PASSED            [ 40%]
+tests/test_agent.py::test_agent_tool_log_agent_event PASSED              [ 50%]
+tests/test_agent.py::test_agent_react_loop_high_confidence_auto_accept PASSED [ 60%]
+tests/test_agent.py::test_agent_react_loop_moderate_confidence_proposes_offer PASSED [ 70%]
+tests/test_agent.py::test_agent_hazard_flag_triggers_safety_escalation PASSED [ 80%]
+tests/test_agent.py::test_agent_no_candidates_fallback_escalation PASSED [ 90%]
+tests/test_agent.py::test_agent_api_endpoints_run_evaluate_and_events PASSED [100%]
+
+============================== 10 passed in 6.86s ==============================
+```
+
+---
+
+## Next Phase: Phase 9 — Twilio SMS Fallback & Communication Bus
+
+1. Twilio SMS client wrapper in `backend/app/services/sms.py` with hard daily cap (`SMS_DAILY_CAP = 20`).
+2. Communication router dispatching push notifications first (FCM) and falling back to SMS when tokens fail or recipients opt for text alerts.
+3. Inbound SMS webhook handling (`POST /v1/sms/webhook`) for one-tap SMS claim confirmation (`RESCUE <claim_id>`).
+
 
 

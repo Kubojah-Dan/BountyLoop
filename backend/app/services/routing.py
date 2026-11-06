@@ -98,4 +98,3 @@ async def get_route(
             logger.info("OSRM request failed (%s); falling back to honest estimate", err)
 
     return generate_estimate_route(lat1, lon1, lat2, lon2)
-

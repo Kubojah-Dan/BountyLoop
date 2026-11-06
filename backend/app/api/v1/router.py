@@ -8,6 +8,7 @@ from __future__ import annotations
 from fastapi import APIRouter
 
 from app.api.v1.routes import (
+    agent,
     auth,
     claims,
     devices,
@@ -29,4 +30,5 @@ router.include_router(offers.router)
 router.include_router(claims.router)
 router.include_router(devices.router)
 router.include_router(routes.router)
+router.include_router(agent.router)
 router.include_router(ws.router)
