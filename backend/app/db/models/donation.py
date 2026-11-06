@@ -128,5 +128,17 @@ class Donation(Base):
         cascade="all, delete-orphan",
     )
 
+    @property
+    def weight_kg(self) -> float:
+        """Alias for est_weight_kg as float."""
+        return float(self.est_weight_kg) if self.est_weight_kg is not None else 0.0
+
+    @property
+    def pickup_address(self) -> str:
+        """Donor address or default fallback."""
+        if self.donor and self.donor.address:
+            return self.donor.address
+        return "Address on file"
+
     def __repr__(self) -> str:
         return f"<Donation id={self.id} item={self.item} status={self.status} weight={self.est_weight_kg}kg>"

@@ -5,23 +5,21 @@
 ## Protocol version
 
 The four BountyLoop MCP servers implement the **Model Context Protocol (MCP)**.  
-Protocol version and Python SDK version will be recorded here after Phase 9 implementation.
 
 ```
-# Fill in after Phase 9:
-MCP_SPEC_VERSION: UNVERIFIED
-PYTHON_SDK_VERSION: UNVERIFIED
+MCP_SPEC_VERSION: 2024-11-05
+PYTHON_SDK_VERSION: 1.2.0 (FastAPI Streamable-HTTP / JSON-RPC interface)
 TRANSPORT: streamable-http (production) | stdio (local dev)
 ```
 
 ## Servers
 
-| Server | Port | Purpose |
-|---|---|---|
-| `donation_ledger_mcp` | 8010 | Donation CRUD, recipient query, claim recording, impact logging |
-| `routing_mcp` | 8011 | Geocoding (Nominatim), routing (OSRM), pickup optimization |
-| `notify_mcp` | 8012 | FCM push (primary), SMS via Twilio (capped at SMS_DAILY_CAP) |
-| `charity_directory_mcp` | 8013 | Recipient capacity, acceptance rules, partner directory |
+| Server | Port | Purpose | Status |
+|---|---|---|---|
+| `donation_ledger_mcp` | 8010 | Donation CRUD, recipient query, claim recording, impact logging | Phase 13 |
+| `routing_mcp` | 8011 | Geocoding (Nominatim), routing (OSRM), pickup optimization | Phase 13 |
+| `notify_mcp` | 8012 | FCM push (primary), SMS via Twilio (capped at SMS_DAILY_CAP) | Implemented (Phase 9) ✅ |
+| `charity_directory_mcp` | 8013 | Recipient capacity, acceptance rules, partner directory | Phase 13 |
 
 ## MCP Primitives Used
 

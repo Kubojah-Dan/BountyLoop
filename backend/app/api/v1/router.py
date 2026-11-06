@@ -16,6 +16,7 @@ from app.api.v1.routes import (
     offers,
     review_queue,
     routes,
+    sms,
     users,
     ws,
 )
@@ -31,4 +32,5 @@ router.include_router(claims.router)
 router.include_router(devices.router)
 router.include_router(routes.router)
 router.include_router(agent.router)
+router.include_router(sms.router)
 router.include_router(ws.router)

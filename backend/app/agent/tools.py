@@ -31,6 +31,7 @@ from app.db.models import (
     ReviewReason,
     ReviewStatus,
 )
+from app.services.communication import communication_bus
 from app.services.matching import get_recipient_consecutive_wins, matching_engine
 from app.services.notification import notification_service
 from app.services.websocket_manager import ws_manager
@@ -209,6 +210,18 @@ async def tool_propose_match(
             recipient_name=recipient_name,
             item_name=donation.item.value,
         )
+
+    # Dispatch offer alert to recipient when offer is proposed
+    if not auto_accept:
+        try:
+            await communication_bus.dispatch_claim_offer(
+                db=db,
+                recipient=recipient,
+                donation=donation,
+                claim=claim,
+            )
+        except Exception as e:
+            logger.warning("Failed to dispatch recipient offer communication: %s", e)
 
     # Broadcast event
     await ws_manager.broadcast(

@@ -1,6 +1,6 @@
 # BountyLoop Implementation Progress
 
-## Current Phase: Phase 8 — Autonomous Matching & Rescue Agent (Claude / smolagents)
+## Current Phase: Phase 9 — Twilio SMS Fallback & Communication Bus
 ## Status: PHASE_COMPLETE ✅
 **Date:** 2026-11-06
 **Branch:** `main`
@@ -504,11 +504,58 @@ tests/test_agent.py::test_agent_api_endpoints_run_evaluate_and_events PASSED [10
 
 ---
 
-## Next Phase: Phase 9 — Twilio SMS Fallback & Communication Bus
+## Phase 9 Progress — Twilio SMS Fallback & Communication Bus
 
-1. Twilio SMS client wrapper in `backend/app/services/sms.py` with hard daily cap (`SMS_DAILY_CAP = 20`).
-2. Communication router dispatching push notifications first (FCM) and falling back to SMS when tokens fail or recipients opt for text alerts.
-3. Inbound SMS webhook handling (`POST /v1/sms/webhook`) for one-tap SMS claim confirmation (`RESCUE <claim_id>`).
+### Acceptance Checklist & Verification
+
+| Criterion | Status | Evidence / Verification |
+|---|---|---|
+| Twilio SMS Client & Hard Daily Cap | `PASS ✅` | Implemented in `backend/app/services/sms.py`. Strictly enforces `SMS_DAILY_CAP = 20` hard limit. Refuses and logs capped status once limit is reached (`test_sms_client_daily_cap_enforcement`). Supports live Twilio API via `httpx` and mock mode for testing (`DISPATCHED_SMS`). |
+| Push-First Communication Bus | `PASS ✅` | Implemented in `backend/app/services/communication.py`. Automatically attempts FCM push delivery first; suppresses SMS if push succeeds (`test_communication_bus_push_first_suppresses_sms`). Falls back gracefully to SMS when recipient lacks active push device tokens (`test_communication_bus_fallback_to_sms_when_no_push_devices`). |
+| Inbound SMS Webhook (`POST /v1/sms/webhook`) | `PASS ✅` | Implemented in `backend/app/api/v1/routes/sms.py`. Handles `RESCUE <claim_id>` / `ACCEPT <claim_id>`, transitions claim to `accepted` and donation to `matched`, dispatches donor notification, and responds with TwiML XML or JSON (`test_inbound_webhook_rescue_confirm_lifecycle`). |
+| Webhook Security & Commands | `PASS ✅` | Validates sender's `phone_e164` ownership against user/recipient record; prevents cross-recipient claim stealing (`test_inbound_webhook_unauthorized_claim_cross_access`). Supports `DECLINE`, `STATUS`, and `HELP` commands. |
+| Audit Persistence & Schema Migration | `PASS ✅` | Added `003_sms_messages` Alembic migration and `SmsMessage` model (`backend/app/db/models/sms_message.py`). Logs all outbound and inbound messages with direction, phone numbers, body, SID, and status. |
+| Model Context Protocol (MCP) Server | `PASS ✅` | Implemented `mcp_servers/notify_mcp/server.py` on port 8012 exposing `send_push`, `send_sms`, `dispatch_notification`, and `get_sms_daily_stats` tools, enforcing daily cap refusal. |
+| API Endpoints | `PASS ✅` | Implemented `GET /v1/sms/usage` (daily quota status) and `POST /v1/sms/send` (manual outbound dispatch) in `backend/app/api/v1/routes/sms.py`. |
+| Backend Pytest Suite | `PASS ✅` | 74 / 74 tests passing across full backend suite (including 13/13 dedicated tests in `test_sms.py`). |
+| Flutter App Suite & Analysis | `PASS ✅` | 10 / 10 tests passing in `mobile/test/`; `flutter analyze` reports 0 issues. |
+| Code Quality | `PASS ✅` | `ruff check` and `ruff format` clean with 0 warnings or errors across the backend codebase. |
+
+### Backend Test Suite Execution Summary (`docker exec bountyloop_api pytest tests/ -q`)
+
+```text
+.......................................................................... [100%]
+74 passed in 27.81s
+```
+
+### SMS & Communication Test Suite Execution Summary (`tests/test_sms.py`)
+
+```text
+tests/test_sms.py::test_sms_client_mock_dispatch_and_audit PASSED        [  7%]
+tests/test_sms.py::test_sms_client_daily_cap_enforcement PASSED          [ 15%]
+tests/test_sms.py::test_sms_client_live_dispatch_twiml_api_mock PASSED   [ 23%]
+tests/test_sms.py::test_communication_bus_push_first_suppresses_sms PASSED [ 30%]
+tests/test_sms.py::test_communication_bus_fallback_to_sms_when_no_push_devices PASSED [ 38%]
+tests/test_sms.py::test_communication_bus_handles_sms_daily_cap_exhaustion PASSED [ 46%]
+tests/test_sms.py::test_communication_bus_domain_helpers PASSED          [ 53%]
+tests/test_sms.py::test_inbound_webhook_rescue_confirm_lifecycle PASSED  [ 61%]
+tests/test_sms.py::test_inbound_webhook_accept_alias_and_json_negotiation PASSED [ 69%]
+tests/test_sms.py::test_inbound_webhook_unregistered_phone PASSED        [ 76%]
+tests/test_sms.py::test_inbound_webhook_unauthorized_claim_cross_access PASSED [ 84%]
+tests/test_sms.py::test_inbound_webhook_decline_and_status_and_help PASSED [ 92%]
+tests/test_sms.py::test_sms_api_usage_and_manual_send PASSED             [100%]
+
+============================= 13 passed in 10.32s ==============================
+```
+
+---
+
+## Next Phase: Phase 10 — Impact Measurement & Methodology
+
+1. FAO meal-equivalent calculations and CO₂e avoidance methodology validation.
+2. Verified vs unverified impact tracking in database (`impact_logs` table) and donor/recipient aggregation endpoints.
+3. Flutter impact celebration cards and community milestone badges.
+
 
 
 

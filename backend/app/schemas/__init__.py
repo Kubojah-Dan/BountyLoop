@@ -21,6 +21,12 @@ from app.schemas.donation import (
     ReviewQueueRead,
     ReviewResolve,
 )
+from app.schemas.sms import (
+    InboundWebhookResponse,
+    SmsSendRequest,
+    SmsSendResponse,
+    SmsUsageRead,
+)
 from app.schemas.user import (
     RoleUpdateRequest,
     SessionCreate,
@@ -54,4 +60,8 @@ __all__ = [
     "AgentRunResponse",
     "AgentStepTrace",
     "AgentEventRead",
+    "SmsUsageRead",
+    "SmsSendRequest",
+    "SmsSendResponse",
+    "InboundWebhookResponse",
 ]

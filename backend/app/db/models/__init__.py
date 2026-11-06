@@ -24,6 +24,7 @@ from app.db.models.enums import (
 from app.db.models.impact import ImpactLog
 from app.db.models.recipient import Recipient
 from app.db.models.review_queue import ReviewQueue
+from app.db.models.sms_message import SmsMessage
 from app.db.models.user import User
 
 __all__ = [
@@ -37,6 +38,7 @@ __all__ = [
     "ImpactLog",
     "AgentEvent",
     "ReviewQueue",
+    "SmsMessage",
     "UserRole",
     "DonorKind",
     "RecipientOrgType",
