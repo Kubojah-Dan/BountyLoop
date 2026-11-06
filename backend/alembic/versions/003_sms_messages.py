@@ -58,3 +58,4 @@ def downgrade() -> None:
     op.drop_index("ix_sms_messages_status", table_name="sms_messages")
     op.drop_index("ix_sms_messages_to_phone", table_name="sms_messages")
     op.drop_table("sms_messages")
+

@@ -86,3 +86,4 @@ class SmsMessage(Base):
 
     user: Mapped[User | None] = relationship("User", foreign_keys=[user_id])
     claim: Mapped[Claim | None] = relationship("Claim", foreign_keys=[claim_id])
+

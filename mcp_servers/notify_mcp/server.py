@@ -176,3 +176,4 @@ async def call_tool(
         status_code=status.HTTP_404_NOT_FOUND,
         detail=f"Unknown MCP tool: {tool_name}",
     )
+
