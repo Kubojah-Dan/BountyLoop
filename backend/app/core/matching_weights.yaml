@@ -1,0 +1,14 @@
+# BountyLoop Fair Allocation Matching Weights (§Master Plan §6 Phase 7)
+# All weights sum to 1.0 (100% composite score)
+weights:
+  distance: 0.30       # Proximity: minimizes transport emissions and travel time
+  urgency: 0.25        # Freshness / shelf-life risk: matches imminent perishables fastest
+  capacity_fit: 0.20   # Size suitability: ensures recipient has daily intake headroom
+  hunger_need: 0.15    # Community priority: hunger urgency index of recipient
+  reliability: 0.10   # Historical reliability: completion and pickup track record
+
+# Guardrails
+equity:
+  max_consecutive_wins: 3   # Max consecutive matches per recipient to prevent starving smaller pantries
+  radius_default_km: 25.0   # Default search radius in kilometers
+  offer_ttl_minutes: 30     # Minutes before an offered claim expires if unaccepted

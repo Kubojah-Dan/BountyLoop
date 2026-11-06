@@ -66,4 +66,3 @@ class Device(Base):
 
     def __repr__(self) -> str:
         return f"<Device id={self.id} user_id={self.user_id} platform={self.platform}>"
-

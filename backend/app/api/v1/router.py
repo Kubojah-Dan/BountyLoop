@@ -14,6 +14,7 @@ from app.api.v1.routes import (
     donations,
     offers,
     review_queue,
+    routes,
     users,
     ws,
 )
@@ -27,4 +28,5 @@ router.include_router(review_queue.router)
 router.include_router(offers.router)
 router.include_router(claims.router)
 router.include_router(devices.router)
+router.include_router(routes.router)
 router.include_router(ws.router)

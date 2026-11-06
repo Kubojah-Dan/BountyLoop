@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:bountyloop_app/core/constants.dart';
 import 'package:bountyloop_app/core/theme.dart';
+import 'package:bountyloop_app/features/map/route_map_strip.dart';
 import 'package:bountyloop_app/models/offer_model.dart';
+import 'package:bountyloop_app/models/route_model.dart';
 import 'package:bountyloop_app/services/claim_service.dart';
 
 class OfferDetailScreen extends ConsumerStatefulWidget {
@@ -164,6 +166,22 @@ class _OfferDetailScreenState extends ConsumerState<OfferDetailScreen> {
                 ),
               ),
             ),
+
+            if (offer.distanceKm != null) ...[
+              const SizedBox(height: 20),
+              RouteMapStrip(
+                route: RouteInfoModel(
+                  claimId: offer.id,
+                  distanceMeters: offer.distanceKm! * 1000.0,
+                  durationSeconds: (offer.distanceKm! / 40.0) * 3600.0,
+                  source: 'estimate',
+                  coordinates: const [],
+                ),
+                donorName: offer.donorName,
+                donorAddress: offer.donorAddress,
+                recipientName: 'My Rescue Facility',
+              ),
+            ],
 
             if (_errorMessage != null) ...[
               const SizedBox(height: 16),

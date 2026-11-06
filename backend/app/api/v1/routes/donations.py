@@ -14,7 +14,7 @@ from __future__ import annotations
 import logging
 import uuid
 from datetime import UTC, datetime, timedelta
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import (
     APIRouter,
@@ -530,3 +530,31 @@ async def get_donation_photo(
     rel_path = donation.photo_paths[photo_index]
     photo_bytes = read_photo_bytes(rel_path)
     return Response(content=photo_bytes, media_type="image/jpeg")
+
+
+@router.post(
+    "/{id}/match",
+    summary="Trigger algorithmic recipient matching and ranking for donation",
+    response_model=dict[str, Any],
+)
+async def match_donation(
+    id: uuid.UUID,
+    radius_km: Annotated[float | None, Query(ge=0.5, le=100.0)] = None,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    """Execute PostGIS-backed candidate matching, equity guard, and multi-factor ranking."""
+    from app.services.matching import matching_engine
+
+    try:
+        result = await matching_engine.match_and_offer(
+            donation_id=id,
+            db=db,
+            radius_km=radius_km,
+        )
+        return result
+    except ValueError as err:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(err),
+        ) from err

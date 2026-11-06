@@ -117,12 +117,20 @@ def _build_claim_read(claim: Claim, impact_record: ImpactLog | None = None) -> C
             "meals_equivalent": float(impact_record.meals_equivalent),
             "co2e_avoided_kg": float(impact_record.co2e_avoided_kg),
         }
-    elif claim.donation and claim.donation.impact_log:
-        impact_dict = {
-            "kg_rescued": float(claim.donation.impact_log.kg_rescued),
-            "meals_equivalent": float(claim.donation.impact_log.meals_equivalent),
-            "co2e_avoided_kg": float(claim.donation.impact_log.co2e_avoided_kg),
-        }
+    elif claim.donation:
+        from sqlalchemy.orm import attributes
+
+        try:
+            state = attributes.instance_state(claim.donation)
+            if "impact_log" in state.dict and state.dict["impact_log"] is not None:
+                log = state.dict["impact_log"]
+                impact_dict = {
+                    "kg_rescued": float(log.kg_rescued),
+                    "meals_equivalent": float(log.meals_equivalent),
+                    "co2e_avoided_kg": float(log.co2e_avoided_kg),
+                }
+        except Exception:
+            pass
 
     return ClaimRead(
         id=claim.id,
@@ -207,6 +215,7 @@ async def create_claim(
         select(Claim)
         .options(
             selectinload(Claim.donation).selectinload(Donation.donor).selectinload(Donor.user),
+            selectinload(Claim.donation).selectinload(Donation.impact_log),
             selectinload(Claim.recipient).selectinload(Recipient.user),
         )
         .where(Claim.id == claim.id)
@@ -393,5 +402,72 @@ async def confirm_pickup(
 
     response_data = _build_claim_read(claim, impact_record=impact_row)
     await ws_manager.broadcast("donation_completed", response_data.model_dump(mode="json"))
+
+    return response_data
+
+
+@router.post(
+    "/{claim_id}/accept",
+    summary="Accept an offered food rescue claim",
+    response_model=ClaimRead,
+)
+async def accept_claim(
+    claim_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> ClaimRead:
+    """Recipient accepts an offered food rescue claim, locking the match."""
+    stmt = (
+        select(Claim)
+        .options(
+            selectinload(Claim.donation).selectinload(Donation.donor).selectinload(Donor.user),
+            selectinload(Claim.donation).selectinload(Donation.impact_log),
+            selectinload(Claim.recipient).selectinload(Recipient.user),
+        )
+        .where(Claim.id == claim_id)
+    )
+    claim = (await db.execute(stmt)).scalar_one_or_none()
+
+    if not claim:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Claim '{claim_id}' not found.",
+        )
+
+    if claim.status == ClaimStatus.accepted:
+        return _build_claim_read(claim)
+
+    if claim.status != ClaimStatus.offered:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Claim in '{claim.status.value}' status cannot be accepted.",
+        )
+
+    now = datetime.now(UTC)
+    claim.status = ClaimStatus.accepted
+    claim.responded_at = now
+
+    if claim.donation:
+        claim.donation.status = DonationStatus.matched
+
+    await db.commit()
+    await db.refresh(claim)
+
+    # Notify donor via push notification
+    if claim.donation and claim.donation.donor and claim.donation.donor.user:
+        recipient_display = (
+            current_user.display_name or current_user.org_name or "A verified food rescue partner"
+        )
+        await notification_service.notify_donation_claimed(
+            db=db,
+            donor_user_id=claim.donation.donor.user.id,
+            donation_id=claim.donation.id,
+            claim_id=claim.id,
+            recipient_name=recipient_display,
+            item_name=claim.donation.item.value,
+        )
+
+    response_data = _build_claim_read(claim)
+    await ws_manager.broadcast("donation_matched", response_data.model_dump(mode="json"))
 
     return response_data

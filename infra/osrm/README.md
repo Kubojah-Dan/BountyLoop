@@ -1,66 +1,38 @@
-# OSRM Self-Hosted Routing — Setup Guide
+# BountyLoop OSRM (Open Source Routing Machine) Guide
 
-> **Phase 7 — add OSRM when matching engine is built.**
+This directory documents how to provision and run a local OSRM routing container for BountyLoop pilot deployments.
 
-## Overview
+## 1. Quickstart with Texas / Austin OSM Extract
 
-BountyLoop uses OSRM (Open Source Routing Machine) for car-routing within the pilot city.
-Data comes from [Geofabrik](https://download.geofabrik.de/) — free and open source.
-
-## Decision log
-
-When setting up routing for the pilot city, choose one of:
-
-1. **Self-hosted OSRM** (always-on container) — accurate, but costs ~$5–7/month on a small VPS outside Render's free tier. Record the cost decision in `docs/cost-decisions.md`.
-2. **OSRM public demo server** (dev only) — free, limited, not for production. Clearly label as `route_source: estimate`.
-3. **Straight-line estimate fallback** — always available in code, clearly labeled `route_source: estimate`.
-
-## Setup steps (when ready in Phase 7)
-
-### 1. Download a city OSM extract
+OSRM requires an `.osm.pbf` road network file. For our Austin, Texas pilot:
 
 ```bash
-# Example: download a city from Geofabrik
-# Replace 'india/kerala' with your actual pilot city region
-wget https://download.geofabrik.de/asia/india/kerala-latest.osm.pbf \
-     -O infra/osrm/data/city.osm.pbf
+mkdir -p data/osrm
+cd data/osrm
+
+# 1. Download regional extract from Geofabrik (~250 MB)
+curl -O https://download.geofabrik.de/north-america/us/texas-latest.osm.pbf
+
+# 2. Extract road network graph with car profile
+docker run -t -v "${PWD}:/data" ghcr.io/project-osrm/osrm-backend osrm-extract -p /opt/car.lua /data/texas-latest.osm.pbf
+
+# 3. Partition and customize for MLD (Multi-Level Dijkstra) routing
+docker run -t -v "${PWD}:/data" ghcr.io/project-osrm/osrm-backend osrm-partition /data/texas-latest.osrm
+docker run -t -v "${PWD}:/data" ghcr.io/project-osrm/osrm-backend osrm-customize /data/texas-latest.osrm
+
+# 4. Run routing daemon on port 5000
+docker run -d --name bountyloop_osrm -p 5000:5000 -v "${PWD}:/data" ghcr.io/project-osrm/osrm-backend osrm-routed --algorithm mld /data/texas-latest.osrm
 ```
 
-### 2. Pre-process the extract
+## 2. Expected Resource and File Sizes
 
-```bash
-docker run -t -v $(pwd)/infra/osrm/data:/data \
-    osrm/osrm-backend osrm-extract \
-    -p /opt/car.lua /data/city.osm.pbf
-
-docker run -t -v $(pwd)/infra/osrm/data:/data \
-    osrm/osrm-backend osrm-partition /data/city.osrm
-
-docker run -t -v $(pwd)/infra/osrm/data:/data \
-    osrm/osrm-backend osrm-customize /data/city.osrm
-```
-
-### 3. Enable in docker-compose.yml
-
-Uncomment the `osrm` service block in `docker-compose.yml`.
-
-### 4. Verify
-
-```bash
-curl "http://localhost:5000/route/v1/driving/80.2707,13.0827;80.2785,13.0878"
-# Should return a route JSON with legs and distance
-```
-
-## Attribution
-
-All map and routing data: © OpenStreetMap contributors.  
-Display this attribution on every map in the app and dashboard.
-
-## File sizes (approximate — verify before extracting on limited disk)
-
-| Region | .osm.pbf size | Extracted OSRM size |
+| File | Approximate Size | Purpose |
 |---|---|---|
-| Small city | ~50–200 MB | ~200–800 MB |
-| State/province | ~500 MB–2 GB | ~2–8 GB |
+| `texas-latest.osm.pbf` | ~250 MB | Raw OpenStreetMap extract |
+| `texas-latest.osrm` | ~600 MB | Graph representation |
+| `texas-latest.osrm.mldgr` | ~150 MB | Multi-level hierarchy graph |
+| RAM required for Austin / Texas | ~1.5 GB | In-memory routing graph |
 
-Check free disk before extraction: `df -h`
+## 3. Fallback Mechanism
+
+If `OSRM_BASE_URL` is empty or the OSRM container is uncontactable, BountyLoop automatically falls back to an interpolated Great Circle road estimate ($40\text{ km/h}$ average urban speed, $1.25\times$ grid tortuosity factor) and stamps `route_source: "estimate"`.

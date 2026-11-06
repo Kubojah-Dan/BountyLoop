@@ -1,6 +1,6 @@
 # BountyLoop Implementation Progress
 
-## Current Phase: Phase 6 — Flutter Mobile App (Donor & Recipient Flows)
+## Current Phase: Phase 7 — Recipient Matching Engine, Routing & Optimization
 ## Status: PHASE_COMPLETE ✅
 **Date:** 2026-11-06
 **Branch:** `main`
@@ -415,11 +415,56 @@ flutter analyze: No issues found!
 
 ---
 
-## Next Phase: Phase 7 — Recipient Matching Engine, Routing & Optimization
+## Phase 7 Progress — Recipient Matching Engine, Routing & Optimization
 
-1. `app/services/matching.py`: PostGIS candidate filtering by radius, acceptance status, category compatibility, and capacity fit.
-2. Fair-allocation recipient scoring (0–100) with weighted factors: distance, urgency, capacity fit, need, and reliability.
-3. Consecutive-win equity guard (`MAX_CONSECUTIVE_WINS`) to prevent large food banks from starving small shelters.
-4. OR-Tools CVRP-lite layer for optimal donor-recipient pairing and multi-stop volunteer routing.
-5. OSRM routing or honestly-labeled estimate fallback with route geometry and polyline for map presentation.
+### Acceptance Checklist & Verification
+
+| Criterion | Status | Evidence / Verification |
+|---|---|---|
+| PostGIS Candidate Discovery | `PASS ✅` | Filter candidate recipients within spatial radius (`ST_DWithin`), intake acceptance (`is_accepting == True`), capacity headroom (`capacity_kg_per_day >= est_weight_kg`), and category compatibility (`accepted_items`). |
+| Multi-Factor Composite Scoring | `PASS ✅` | Configured transparently in `backend/app/core/matching_weights.yaml` (`distance: 0.30`, `urgency: 0.25`, `capacity_fit: 0.20`, `hunger_need: 0.15`, `reliability: 0.10`). Tested in `test_matching.py`. |
+| Consecutive-Win Equity Guard | `PASS ✅` | `MAX_CONSECUTIVE_WINS` (3) prevents large food banks from starving smaller pantries; blocks candidates with >= 3 consecutive wins. Verified in `test_equity_guard_blocks_consecutive_wins`. |
+| CVRP-Lite Routing Optimizer | `PASS ✅` | `backend/app/services/optimizer.py` implements 2-Opt Tour Optimizer and OR-Tools fallback; untangles loop configurations and beats naive nearest-neighbor (`test_cvrp_optimizer_2opt_beats_nearest_neighbor`). |
+| Polyline Routing & Honest Fallback | `PASS ✅` | `backend/app/services/routing.py` queries OSRM when configured and falls back to honest road estimation (`source: "estimate"` vs `"osrm"`) with GeoJSON LineString geometry. |
+| API Endpoints | `PASS ✅` | `POST /v1/donations/{id}/match` executes matching and generates top candidate Claim; `POST /v1/claims/{id}/accept` transitions claim to `accepted` and donation to `matched`; `GET /v1/routes/{claim_id}` returns route polyline and navigation metrics. |
+| Flutter Mobile Map Route Strip | `PASS ✅` | `mobile/lib/features/map/route_map_strip.dart` displays distance, ETA, honest source chip (`OSRM Live Route` vs `Road Estimate`), custom polyline track canvas, and OSM legal attribution (`© OpenStreetMap contributors`). |
+| Backend Test Suite | `PASS ✅` | 51/51 pytest tests passing in `docker exec bountyloop_api pytest tests/` (100% pass rate). |
+| Flutter Test Suite & Analysis | `PASS ✅` | 10/10 tests passing in `mobile/test/`; `flutter analyze` reports 0 issues. |
+| Code Quality | `PASS ✅` | `ruff check` and `ruff format` passed with 0 errors across backend codebase. |
+
+### Backend Test Suite Execution Summary (`docker exec bountyloop_api pytest tests/ -q`)
+
+```text
+...................................................                      [100%]
+51 passed in 17.58s
+```
+
+### Flutter Test Suite Execution Summary (`mobile/test/`)
+
+```text
+00:00 +0: D:/BountyLoop/mobile/test/camera_capture_test.dart: CameraCaptureScreen allows setting weight and choosing sample photo
+00:02 +1: D:/BountyLoop/mobile/test/celebration_impact_test.dart: PickupConfirmationScreen renders closing loop and proof options
+00:05 +2: D:/BountyLoop/mobile/test/cv_preview_card_test.dart: CvPreviewCard renders AI prediction, confidence, and freshness badge
+00:06 +3: D:/BountyLoop/mobile/test/offers_card_test.dart: OfferCard displays food item, weight, distance, and expiry countdown
+00:06 +4: D:/BountyLoop/mobile/test/offers_card_test.dart: OfferCard displays food item, weight, distance, and expiry countdown
+00:08 +5: D:/BountyLoop/mobile/test/route_map_test.dart: RouteInfoModel serialization & formatting parses GeoJSON LineString and formats distance & ETA properly
+00:08 +6: D:/BountyLoop/mobile/test/route_map_test.dart: RouteInfoModel serialization & formatting handles straight-line estimate fallback source gracefully
+00:08 +7: D:/BountyLoop/mobile/test/route_map_test.dart: RouteMapStrip Widget renders OSRM live route with OSM attribution and navigation trigger
+00:10 +8: D:/BountyLoop/mobile/test/widget_test.dart: Login screen loads with BountyLoop branding and role toggles
+00:10 +9: D:/BountyLoop/mobile/test/widget_test.dart: Login screen loads with BountyLoop branding and role toggles
+00:13 +10: All tests passed!
+
+Total: 10 / 10 tests passing (100%)
+flutter analyze: No issues found!
+```
+
+---
+
+## Next Phase: Phase 8 — Autonomous Matching & Rescue Agent (Claude / smolagents)
+
+1. `backend/app/agent/`: Autonomous food rescue coordinator using Claude 3.5 Sonnet / smolagents.
+2. Tool suite: `search_candidates`, `propose_match`, `rebalance_distribution`, `log_agent_event`.
+3. Multi-turn reasoning loops with ReAct pattern and safety sandboxing.
+4. Autonomous claim creation, auto-acceptance under high confidence, and human escalation fallback.
+
 
