@@ -4,6 +4,7 @@ from app.services.cv_client import cv_client
 from app.services.freshness_rules import calculate_expiry, get_hours_to_spoil
 from app.services.impact import co2e_avoided, compute_donation_impact, meals_equivalent
 from app.services.label_store import append_label_record
+from app.services.notification import DISPATCHED_NOTIFICATIONS, notification_service
 from app.services.storage import read_photo_bytes, save_donation_photo
 from app.services.websocket_manager import ws_manager
 
@@ -18,4 +19,6 @@ __all__ = [
     "compute_donation_impact",
     "append_label_record",
     "ws_manager",
+    "notification_service",
+    "DISPATCHED_NOTIFICATIONS",
 ]

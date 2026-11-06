@@ -18,6 +18,7 @@ from app.db.base import Base, utc_now
 from app.db.models.enums import UserRole
 
 if TYPE_CHECKING:
+    from app.db.models.device import Device
     from app.db.models.donor import Donor
     from app.db.models.recipient import Recipient
 
@@ -90,6 +91,11 @@ class User(Base):
         "Recipient",
         back_populates="user",
         uselist=False,
+        cascade="all, delete-orphan",
+    )
+    devices: Mapped[list[Device]] = relationship(
+        "Device",
+        back_populates="user",
         cascade="all, delete-orphan",
     )
 

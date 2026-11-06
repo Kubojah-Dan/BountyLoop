@@ -6,6 +6,7 @@ Exports Base, all entity models, and canonical enums.
 from app.db.base import Base
 from app.db.models.agent_event import AgentEvent
 from app.db.models.claim import Claim
+from app.db.models.device import Device
 from app.db.models.donation import Donation
 from app.db.models.donor import Donor
 from app.db.models.enums import (
@@ -28,6 +29,7 @@ from app.db.models.user import User
 __all__ = [
     "Base",
     "User",
+    "Device",
     "Donor",
     "Recipient",
     "Donation",

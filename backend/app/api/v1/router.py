@@ -7,7 +7,16 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
-from app.api.v1.routes import auth, donations, review_queue, users, ws
+from app.api.v1.routes import (
+    auth,
+    claims,
+    devices,
+    donations,
+    offers,
+    review_queue,
+    users,
+    ws,
+)
 
 router = APIRouter()
 
@@ -15,4 +24,7 @@ router.include_router(auth.router)
 router.include_router(users.router)
 router.include_router(donations.router)
 router.include_router(review_queue.router)
+router.include_router(offers.router)
+router.include_router(claims.router)
+router.include_router(devices.router)
 router.include_router(ws.router)
