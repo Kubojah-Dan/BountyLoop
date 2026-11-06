@@ -18,3 +18,4 @@ class RouteService {
     return RouteInfoModel.fromJson(response.data as Map<String, dynamic>);
   }
 }
+

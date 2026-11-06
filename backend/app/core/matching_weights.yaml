@@ -12,3 +12,4 @@ equity:
   max_consecutive_wins: 3   # Max consecutive matches per recipient to prevent starving smaller pantries
   radius_default_km: 25.0   # Default search radius in kilometers
   offer_ttl_minutes: 30     # Minutes before an offered claim expires if unaccepted
+

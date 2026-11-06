@@ -85,3 +85,4 @@ class RouteInfoModel {
     return '${hours}h ${remMins}m';
   }
 }
+
