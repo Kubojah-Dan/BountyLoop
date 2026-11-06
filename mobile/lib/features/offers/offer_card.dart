@@ -144,3 +144,4 @@ class OfferCard extends StatelessWidget {
     );
   }
 }
+

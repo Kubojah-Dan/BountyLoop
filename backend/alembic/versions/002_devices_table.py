@@ -50,3 +50,4 @@ def downgrade() -> None:
     op.drop_index("ix_devices_fcm_token", table_name="devices")
     op.drop_index("ix_devices_user_id", table_name="devices")
     op.drop_table("devices")
+

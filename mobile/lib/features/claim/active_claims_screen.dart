@@ -179,3 +179,4 @@ class _ActiveClaimsScreenState extends ConsumerState<ActiveClaimsScreen> {
     );
   }
 }
+

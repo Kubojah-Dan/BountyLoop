@@ -38,3 +38,4 @@ async def register_device(
         fcm_token=payload.fcm_token,
         platform=payload.platform,
     )
+

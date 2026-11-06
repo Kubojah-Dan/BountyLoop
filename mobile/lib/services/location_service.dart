@@ -20,3 +20,4 @@ final locationProvider = StateProvider<UserLocation>((ref) {
     label: 'Downtown Austin, TX',
   );
 });
+

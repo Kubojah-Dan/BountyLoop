@@ -283,3 +283,4 @@ class _CameraCaptureScreenState extends ConsumerState<CameraCaptureScreen> {
     );
   }
 }
+

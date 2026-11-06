@@ -123,3 +123,4 @@ final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   final apiClient = ref.watch(apiClientProvider);
   return AuthNotifier(apiClient);
 });
+

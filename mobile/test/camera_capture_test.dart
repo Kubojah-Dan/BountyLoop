@@ -36,3 +36,4 @@ void main() {
     expect(find.text('6.0'), findsOneWidget);
   });
 }
+

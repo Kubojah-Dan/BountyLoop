@@ -184,3 +184,4 @@ class _OffersListScreenState extends ConsumerState<OffersListScreen> {
     );
   }
 }
+
