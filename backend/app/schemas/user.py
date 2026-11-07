@@ -20,6 +20,10 @@ class UserBase(BaseModel):
     display_name: str = Field(..., min_length=1, max_length=255)
     phone_e164: str | None = Field(default=None, max_length=32)
     org_name: str | None = Field(default=None, max_length=255)
+    consent_model_training: bool = Field(
+        default=False,
+        description="Explicit user consent to include anonymized donation photos in monthly model fine-tuning.",
+    )
 
 
 class UserRead(UserBase):
@@ -41,6 +45,21 @@ class UserUpdate(BaseModel):
     display_name: str | None = Field(default=None, min_length=1, max_length=255)
     phone_e164: str | None = Field(default=None, max_length=32)
     org_name: str | None = Field(default=None, max_length=255)
+    consent_model_training: bool | None = Field(
+        default=None,
+        description="Toggle consent for donation images to be used in model retraining.",
+    )
+
+
+class UserPurgeResponse(BaseModel):
+    """Response returned upon successful personal data deletion and photo purging."""
+
+    status: str = "purged"
+    message: str
+    user_id: uuid.UUID
+    photos_deleted: int
+    retention_policy_link: str = "/docs/privacy.md"
+    purged_at: datetime
 
 
 class RoleUpdateRequest(BaseModel):

@@ -10,7 +10,7 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
-from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, Numeric, Text, func
+from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, Numeric, String, Text, func
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -93,6 +93,12 @@ class Donation(Base):
     )
     model_versions: Mapped[dict[str, Any] | None] = mapped_column(
         JSONB,
+        nullable=True,
+    )
+    idempotency_key: Mapped[str | None] = mapped_column(
+        String(64),
+        unique=True,
+        index=True,
         nullable=True,
     )
     created_at: Mapped[datetime] = mapped_column(

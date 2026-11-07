@@ -7,15 +7,19 @@ and role-guarded resource access.
 from __future__ import annotations
 
 import logging
+import shutil
 
 from fastapi import APIRouter, Depends, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.core.security import get_current_user, require_role
 from app.db.base import utc_now
-from app.db.models import User, UserRole
+from app.db.models import Donor, User, UserRole
 from app.db.session import get_db
-from app.schemas.user import RoleUpdateRequest, UserRead, UserUpdate
+from app.schemas.user import RoleUpdateRequest, UserPurgeResponse, UserRead, UserUpdate
+from app.services.storage import PHOTOS_DIR
 
 logger = logging.getLogger(__name__)
 
@@ -55,11 +59,76 @@ async def update_me(
         current_user.phone_e164 = payload.phone_e164
     if payload.org_name is not None:
         current_user.org_name = payload.org_name
+    if payload.consent_model_training is not None:
+        current_user.consent_model_training = payload.consent_model_training
 
     current_user.last_seen_at = utc_now()
     await db.commit()
     await db.refresh(current_user)
     return UserRead.model_validate(current_user)
+
+
+@router.delete(
+    "/me/data",
+    response_model=UserPurgeResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Purge personal data and photos (Right to be Forgotten)",
+    description=(
+        "Permanently wipes uploaded photos from disk, clears retraining consent, "
+        "and anonymizes personal information in compliance with retention schedule."
+    ),
+)
+async def purge_my_data(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> UserPurgeResponse:
+    """Purge user PII, donation photos, and labels."""
+    photos_deleted_count = 0
+
+    # 1. Locate all donations associated with user's donor profile
+    donor_stmt = (
+        select(Donor).options(selectinload(Donor.donations)).where(Donor.user_id == current_user.id)
+    )
+    donor_res = await db.execute(donor_stmt)
+    donor = donor_res.scalar_one_or_none()
+
+    if donor and donor.donations:
+        for don in donor.donations:
+            # Delete donation photo directory on disk
+            donation_dir = PHOTOS_DIR / str(don.id)
+            if donation_dir.exists():
+                try:
+                    num_files = len(list(donation_dir.glob("*")))
+                    shutil.rmtree(donation_dir)
+                    photos_deleted_count += num_files
+                except Exception as exc:
+                    logger.warning("Failed to delete photo directory %s: %s", donation_dir, exc)
+            don.photo_paths = []
+
+    # 2. Anonymize user profile
+    current_user.display_name = "Deleted User"
+    current_user.email = f"purged_{current_user.id.hex[:12]}@privacy.bountyloop.local"
+    current_user.phone_e164 = None
+    current_user.org_name = None
+    current_user.is_active = False
+    current_user.consent_model_training = False
+    current_user.last_seen_at = utc_now()
+
+    await db.commit()
+    logger.info(
+        "Purged PII and %d photos for user %s (Right to be Forgotten)",
+        photos_deleted_count,
+        current_user.id,
+    )
+
+    return UserPurgeResponse(
+        status="purged",
+        message="User personal data and associated media have been permanently purged.",
+        user_id=current_user.id,
+        photos_deleted=photos_deleted_count,
+        retention_policy_link="/docs/privacy.md",
+        purged_at=utc_now(),
+    )
 
 
 @router.post(

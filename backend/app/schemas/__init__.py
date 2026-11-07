@@ -52,6 +52,7 @@ from app.schemas.user import (
     SessionCreate,
     SessionResponse,
     UserBase,
+    UserPurgeResponse,
     UserRead,
     UserUpdate,
 )
@@ -63,6 +64,7 @@ __all__ = [
     "UserBase",
     "UserRead",
     "UserUpdate",
+    "UserPurgeResponse",
     "RoleUpdateRequest",
     "SessionCreate",
     "SessionResponse",

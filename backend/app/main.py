@@ -7,20 +7,28 @@ slowapi rate limiting, health checks, and API v1 routes.
 from __future__ import annotations
 
 import logging
+import time
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from typing import Any
 
-from fastapi import FastAPI, HTTPException, Request
+import httpx
+from fastapi import Depends, FastAPI, HTTPException, Query, Request, Response, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from slowapi import Limiter
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.router import router as v1_router
 from app.core.config import get_settings
 from app.core.logging import RequestIdMiddleware, configure_logging
+from app.core.metrics import metrics_registry
+from app.db.session import get_db
+from app.services.security import cv_circuit_breaker
 
 logger = logging.getLogger(__name__)
 
@@ -63,6 +71,19 @@ def create_app() -> FastAPI:
     app.state.limiter = limiter
 
     # ── Middleware ─────────────────────────────────────────────────────────────
+    @app.middleware("http")
+    async def _metrics_and_latency_middleware(request: Request, call_next: Any) -> Response:
+        start_time = time.perf_counter()
+        response: Response = await call_next(request)
+        duration = time.perf_counter() - start_time
+        metrics_registry.record_request(
+            method=request.method,
+            endpoint=request.url.path,
+            status_code=response.status_code,
+            duration_seconds=duration,
+        )
+        return response
+
     app.add_middleware(RequestIdMiddleware)
     app.add_middleware(
         CORSMiddleware,
@@ -154,14 +175,80 @@ def create_app() -> FastAPI:
             media_type="application/problem+json",
         )
 
-    # ── Health Check ──────────────────────────────────────────────────────────
-    @app.get("/healthz", tags=["ops"], summary="Liveness probe")
-    async def healthz() -> dict[str, str]:
-        return {
+    # ── Health & Readiness Probes ─────────────────────────────────────────────
+    @app.get("/healthz", tags=["ops"], summary="Liveness & Deep Dependency Health Probe")
+    async def healthz(
+        deep: bool = Query(False, description="Execute deep database and CV checks"),
+        db: AsyncSession = Depends(get_db),
+    ) -> JSONResponse:
+        base_resp: dict[str, Any] = {
             "status": "ok",
             "version": settings.app_version,
             "env": settings.app_env,
         }
+        if not deep:
+            return JSONResponse(status_code=status.HTTP_200_OK, content=base_resp)
+
+        # Deep health check probing DB, PostGIS, CV service, and circuit breaker
+        components: dict[str, Any] = {}
+        is_healthy = True
+
+        # 1. PostgreSQL & PostGIS Check
+        try:
+            t0 = time.perf_counter()
+            pg_res = await db.execute(text("SELECT PostGIS_Version();"))
+            pg_ver = pg_res.scalar()
+            components["database"] = {
+                "status": "connected",
+                "postgis_version": pg_ver,
+                "latency_ms": round((time.perf_counter() - t0) * 1000, 2),
+            }
+        except Exception as exc:
+            is_healthy = False
+            components["database"] = {"status": "error", "error": str(exc)}
+
+        # 2. CV Microservice Probe
+        try:
+            t0 = time.perf_counter()
+            async with httpx.AsyncClient(timeout=2.0) as client:
+                cv_resp = await client.get(f"{settings.cv_service_url}/healthz")
+            if cv_resp.status_code == 200:
+                components["cv_service"] = {
+                    "status": "online",
+                    "latency_ms": round((time.perf_counter() - t0) * 1000, 2),
+                    "details": cv_resp.json(),
+                }
+            else:
+                is_healthy = False
+                components["cv_service"] = {"status": "degraded", "code": cv_resp.status_code}
+        except Exception as exc:
+            is_healthy = False
+            components["cv_service"] = {"status": "unreachable", "error": str(exc)}
+
+        # 3. Circuit Breaker
+        components["circuit_breaker"] = {
+            "state": cv_circuit_breaker.state,
+            "consecutive_failures": cv_circuit_breaker.consecutive_failures,
+        }
+
+        overall_status = "healthy" if is_healthy else "degraded"
+        status_code = status.HTTP_200_OK if is_healthy else status.HTTP_503_SERVICE_UNAVAILABLE
+
+        return JSONResponse(
+            status_code=status_code,
+            content={
+                **base_resp,
+                "status": overall_status,
+                "components": components,
+            },
+        )
+
+    # ── Prometheus Metrics ────────────────────────────────────────────────────
+    @app.get("/metrics", tags=["ops"], summary="Prometheus format operational metrics")
+    async def metrics_endpoint(db: AsyncSession = Depends(get_db)) -> Response:
+        """Prometheus metrics exposition endpoint."""
+        body = await metrics_registry.generate_prometheus_output(db=db)
+        return Response(content=body, media_type="text/plain; version=0.0.4; charset=utf-8")
 
     # ── API v1 Router ─────────────────────────────────────────────────────────
     app.include_router(v1_router, prefix="/v1")

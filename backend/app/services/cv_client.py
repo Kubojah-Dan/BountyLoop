@@ -16,6 +16,7 @@ import httpx
 
 from app.core.config import get_settings
 from app.db.models.enums import FoodCategory, FreshnessGrade, HazardFlag
+from app.services.security import cv_circuit_breaker
 
 logger = logging.getLogger(__name__)
 
@@ -67,6 +68,13 @@ class CVClient:
 
         If CV service is unavailable or errors after retries, returns safe fallback.
         """
+        # Circuit breaker pre-check
+        if not cv_circuit_breaker.is_available():
+            logger.warning(
+                "CV Circuit Breaker is OPEN. Short-circuiting directly to review fallback."
+            )
+            return self.get_fallback_prediction(reason="circuit_breaker_open")
+
         predict_url = f"{self.base_url}/predict"
         params = {}
         if apply_tta is not None:
@@ -82,6 +90,7 @@ class CVClient:
                     resp = await client.post(predict_url, files=files, params=params)
 
                 if resp.status_code == 200:
+                    cv_circuit_breaker.record_success()
                     data = resp.json()
                     # Map to canonical enums
                     item_str = data.get("item", FoodCategory.other_unclassified.value)
@@ -136,6 +145,7 @@ class CVClient:
                     exc,
                 )
 
+        cv_circuit_breaker.record_failure()
         return self.get_fallback_prediction(
             reason=f"connection_error_{type(last_error).__name__}" if last_error else "unknown"
         )

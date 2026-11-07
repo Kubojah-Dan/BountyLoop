@@ -21,6 +21,7 @@ from fastapi import (
     Depends,
     File,
     Form,
+    Header,
     HTTPException,
     Query,
     Response,
@@ -53,6 +54,7 @@ from app.schemas.donation import DonationConfirm, DonationRead
 from app.services.cv_client import cv_client
 from app.services.freshness_rules import calculate_expiry
 from app.services.label_store import append_label_record
+from app.services.security import validate_image_upload
 from app.services.storage import read_photo_bytes, save_donation_photo
 from app.services.websocket_manager import ws_manager
 
@@ -163,22 +165,43 @@ def _build_donation_read(donation: Donation) -> DonationRead:
 )
 async def create_donation(
     files: Annotated[list[UploadFile], File(description="1 to 3 food photos")],
+    response: Response,
     est_weight_kg: Annotated[float | None, Form(ge=0.1, le=5000.0)] = None,
     latitude: Annotated[float | None, Form(ge=-90.0, le=90.0)] = None,
     longitude: Annotated[float | None, Form(ge=-180.0, le=180.0)] = None,
     address: Annotated[str | None, Form()] = None,
+    x_idempotency_key: Annotated[str | None, Header(alias="X-Idempotency-Key")] = None,
+    idempotency_key: Annotated[str | None, Form()] = None,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> DonationRead:
     """Photo-to-Donate ingestion endpoint.
 
     Performs:
-    1. Validation of image count (1-3) and total size (<10MB).
-    2. Server-side EXIF stripping and SHA-256 deduplication.
-    3. CV inference via cv_client (with graceful offline fallback).
-    4. Draft donation creation + review queue triage if low confidence or hazard detected.
-    5. WebSocket broadcast for real-time dashboards.
+    1. Validation of image count (1-3), magic bytes, size cap (<10MB), and decompression bounds.
+    2. Idempotency deduplication check on idempotency_key for offline outbox sync.
+    3. Server-side EXIF stripping and SHA-256 deduplication.
+    4. CV inference via cv_client (with graceful offline fallback).
+    5. Draft donation creation + review queue triage if low confidence or hazard detected.
+    6. WebSocket broadcast for real-time dashboards.
     """
+    resolved_idemp = x_idempotency_key or idempotency_key
+    if resolved_idemp:
+        existing_stmt = (
+            select(Donation)
+            .options(selectinload(Donation.donor).selectinload(Donor.user))
+            .where(Donation.idempotency_key == resolved_idemp)
+        )
+        existing_don = (await db.execute(existing_stmt)).scalar_one_or_none()
+        if existing_don:
+            logger.info(
+                "Idempotency hit: returning existing donation %s for key %s",
+                existing_don.id,
+                resolved_idemp,
+            )
+            response.status_code = status.HTTP_200_OK
+            return _build_donation_read(existing_don)
+
     if not files or len(files) == 0:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -202,9 +225,8 @@ async def create_donation(
     donation_id = uuid.uuid4()
     saved_photo_paths: list[str] = []
     primary_photo_bytes: bytes | None = None
-    max_upload_bytes = settings.max_upload_mb * 1024 * 1024
 
-    # 2. Process, sanitize, and save each uploaded photo
+    # 2. Process, validate, sanitize, and save each uploaded photo
     for idx, uploaded_file in enumerate(files):
         content = await uploaded_file.read()
         if not content or len(content) == 0:
@@ -212,11 +234,13 @@ async def create_donation(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Photo '{uploaded_file.filename}' is empty.",
             )
-        if len(content) > max_upload_bytes:
-            raise HTTPException(
-                status_code=status.HTTP_413_CONTENT_TOO_LARGE,
-                detail=f"Photo '{uploaded_file.filename}' exceeds the maximum size of {settings.max_upload_mb} MB.",
-            )
+
+        # Security validation: Magic bytes sniffing, size caps (413), decompression bomb guard
+        validate_image_upload(
+            file_bytes=content,
+            filename=uploaded_file.filename or "photo.jpg",
+            max_upload_mb=settings.max_upload_mb,
+        )
 
         # Sanitize EXIF, hash, and persist to storage/photos/<donation_id>/<uuid>.jpg
         rel_path, photo_hash = save_donation_photo(donation_id, content)
@@ -268,6 +292,7 @@ async def create_donation(
         status=DonationStatus.draft,
         needs_review=needs_review,
         model_versions=cv_result.get("model_versions"),
+        idempotency_key=resolved_idemp,
     )
     db.add(donation)
 

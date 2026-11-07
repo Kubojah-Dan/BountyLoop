@@ -633,12 +633,61 @@ ml/tests/test_forecaster_ml.py::test_walk_forward_evaluation_beats_naive_baselin
 
 ---
 
-## Next Phase: Phase 12 — Hardening: Offline Mobile, Privacy, Security & Observability
+## Phase 12 Progress — Hardening: Offline Mobile, Privacy, Security & Observability
 
-1. **Offline-First Mobile:** SQLite outbox (`sqflite`), background sync queue, idempotency key verification.
-2. **Privacy Enforcement:** Client and server-side EXIF/GPS stripping, donor consent toggle, and `DELETE /v1/me/data` retention purge workflow.
-3. **Security Safeguards:** Magic byte upload validation, dimension caps, decompression-bomb defense, rate limiting, and dependency vulnerability scans.
-4. **Observability & Health:** Structured JSON logging, Prometheus metrics (`GET /metrics`), Sentry integration, and deep `/healthz` dependency check.
+### Acceptance Checklist & Verification
+
+| Criterion | Status | Evidence / Verification |
+|---|---|---|
+| Offline-First Mobile Outbox | `PASS ✅` | Implemented in `mobile/lib/core/offline/outbox_manager.dart`. Queues donations locally in SQLite/outbox during network dropouts; assigns UUID idempotency keys; triggers exponential backoff retries with jitter upon reconnect; applies "server wins" conflict policy. Verified across 5 dedicated Flutter unit tests (`mobile/test/offline_outbox_test.dart`). |
+| Server-Side EXIF / GPS Stripping | `PASS ✅` | Dual-layer metadata stripping in `backend/app/services/storage.py`. Transposes orientation and strips 100% of EXIF/GPS data before persisting to disk (`storage/photos/<donation_id>`). Verified in `test_exif_gps_metadata_is_stripped_server_side`. |
+| Privacy Consent & Right to be Forgotten | `PASS ✅` | Alembic migration `005_hardening_privacy.py` adds `consent_model_training` boolean to `users` and `idempotency_key` string to `donations`. `PATCH /v1/me` toggles training consent. `DELETE /v1/me/data` permanently purges donation photo folders from disk, clears consent, and anonymizes PII. Verified in `test_privacy_consent_toggle_and_purge_endpoint`. Documented in `docs/privacy.md`. |
+| Image Upload Security & Decompression Guard | `PASS ✅` | `validate_image_upload` in `backend/app/services/security.py` enforces magic-byte sniffing (JPEG, PNG, WebP), rejecting renamed text/binary files with HTTP 400; enforces `MAX_UPLOAD_MB` (default 10 MB) returning HTTP 413; restricts pixel counts (`SAFE_MAX_PIXELS = 25,000,000`) and max dimensions (4096px) against zip/decompression bombs. |
+| Service Token Authorization | `PASS ✅` | `verify_internal_service_token` dependency verifies `INTERNAL_SERVICE_TOKEN` Bearer authentication for machine-to-machine internal endpoints. Verified in `test_internal_service_token_enforcement`. |
+| Prometheus Observability (`GET /metrics`) | `PASS ✅` | Thread-safe `MetricsRegistry` in `backend/app/core/metrics.py` collects request counts, latencies, review queue depths, active offers count, kg rescued, and CV circuit breaker state. Exposed at `GET /metrics` in Prometheus standard exposition text (`text/plain; version=0.0.4`). |
+| Liveness & Deep Health Probes (`/healthz`) | `PASS ✅` | `GET /healthz` performs shallow liveness. `GET /healthz?deep=true` conducts live dependency probes against PostGIS (`SELECT PostGIS_Version();`), the CV service HTTP endpoint, and circuit breaker health. |
+| CV Circuit Breaker & Fallback | `PASS ✅` | `CVCircuitBreaker` in `backend/app/services/security.py` trips to `OPEN` on 3 consecutive failures with a 30s recovery window. Integrated into `CVClient.predict()` to gracefully degrade to human review queue without throwing 500s or blocking donors. Verified in `test_cv_circuit_breaker_degrades_gracefully`. |
+| Secret Scan Audit | `PASS ✅` | Automated repository scan in `test_no_live_secrets_committed` verifies no live credentials, AWS tokens, GitHub PATs, or unencrypted private keys exist in tracked source code. |
+| Load Testing Sanity Check | `PASS ✅` | Locust test harness created in `infra/loadtest/locustfile.py` simulating 50 concurrent donors and 200 dashboard pollers. Benchmark results, p50/p95/p99 latencies, and Neon connection-pool bottleneck mitigations recorded in `docs/load-test-results.md`. |
+| Automated Test Suites | `PASS ✅` | **102 / 102 backend tests passing** in Docker; **15 / 15 Flutter tests passing**; 0 issues on `flutter analyze`; zero linter or formatting errors via Ruff. |
+
+### Backend Pytest Suite Execution Summary (`docker exec bountyloop_api pytest tests/ -q`)
+
+```text
+........................................................................ [ 70%]
+..............................                                           [100%]
+102 passed in 71.39s (0:01:11)
+```
+
+### Mobile Test Suite Execution Summary (`flutter test`)
+
+```text
+00:00 +0: D:/BountyLoop/mobile/test/camera_capture_test.dart: CameraCaptureScreen allows setting weight and choosing sample photo
+00:02 +1: D:/BountyLoop/mobile/test/celebration_impact_test.dart: PickupConfirmationScreen renders closing loop and proof options
+00:04 +2: D:/BountyLoop/mobile/test/cv_preview_card_test.dart: CvPreviewCard renders AI prediction, confidence, and freshness badge
+00:06 +3: D:/BountyLoop/mobile/test/offers_card_test.dart: OfferCard displays food item, weight, distance, and expiry countdown
+00:08 +5: D:/BountyLoop/mobile/test/offline_outbox_test.dart: Offline Outbox & Synchronization Tests (Phase 12) Airplane mode: enqueue offline donation creates pending item with idempotency key
+00:08 +6: D:/BountyLoop/mobile/test/offline_outbox_test.dart: Offline Outbox & Synchronization Tests (Phase 12) Idempotency key prevents duplicate enqueueing
+00:08 +7: D:/BountyLoop/mobile/test/offline_outbox_test.dart: Offline Outbox & Synchronization Tests (Phase 12) Reconnect flush successfully transitions pending items to synced
+00:08 +8: D:/BountyLoop/mobile/test/offline_outbox_test.dart: Offline Outbox & Synchronization Tests (Phase 12) Exponential backoff retry increments on server error
+00:08 +9: D:/BountyLoop/mobile/test/offline_outbox_test.dart: Offline Outbox & Synchronization Tests (Phase 12) Serialization and deserialization across app lifecycle
+00:08 +10: D:/BountyLoop/mobile/test/route_map_test.dart: RouteInfoModel serialization & formatting parses GeoJSON LineString and formats distance & ETA properly
+00:08 +11: D:/BountyLoop/mobile/test/route_map_test.dart: RouteInfoModel serialization & formatting handles straight-line estimate fallback source gracefully
+00:08 +12: D:/BountyLoop/mobile/test/route_map_strip_test.dart: RouteMapStrip Widget renders OSRM live route with OSM attribution and navigation trigger
+00:10 +13: D:/BountyLoop/mobile/test/widget_test.dart: Login screen loads with BountyLoop branding and role toggles
+00:11 +15: All tests passed!
+```
+
+---
+
+## Next Phase: Phase 13 — Deployment and CI/CD
+
+1. **Neon PostGIS DB Configuration:** Production schema migration runbook and connection pool parameters.
+2. **Render Multi-Service Infrastructure:** `infra/render.yaml` orchestration for `bountyloop-api`, `bountyloop-cv` (with baked ONNX artifacts under 512 MB RSS), and MCP servers.
+3. **Vercel Dashboard Deployment:** SPA build with environment secrets configuration.
+4. **CI/CD Workflows:** GitHub Actions pipelines for linting, testing, Docker builds, and nightly ML drift detection (`ml-nightly.yml`).
+5. **Deployment Guide:** Complete step-by-step instructions in `docs/deploy.md` and automated smoke verification script.
+
 
 
 
