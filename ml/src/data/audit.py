@@ -136,7 +136,7 @@ def audit_directory(
         "min_resolution": f"{min(res_w)}x{min(res_h)}" if resolutions else "N/A",
         "max_resolution": f"{max(res_w)}x{max(res_h)}" if resolutions else "N/A",
         "avg_resolution": (
-            f"{int(sum(res_w)/len(res_w))}x{int(sum(res_h)/len(res_h))}"
+            f"{int(sum(res_w) / len(res_w))}x{int(sum(res_h) / len(res_h))}"
             if resolutions
             else "N/A"
         ),

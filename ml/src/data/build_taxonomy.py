@@ -172,9 +172,9 @@ def build_taxonomy_yaml(classes_file: Path, output_file: Path) -> None:
     for cls in classes:
         if cls in FOOD101_TO_RESCUE_TAXONOMY:
             category = FOOD101_TO_RESCUE_TAXONOMY[cls]
-            assert (
-                category in VALID_TAXONOMY_CATEGORIES
-            ), f"Invalid category {category} for {cls}"
+            assert category in VALID_TAXONOMY_CATEGORIES, (
+                f"Invalid category {category} for {cls}"
+            )
             taxonomy_map[cls] = category
         else:
             missing_classes.append(cls)

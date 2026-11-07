@@ -79,5 +79,11 @@ class Donor(Base):
         cascade="all, delete-orphan",
     )
 
+    @property
+    def business_name(self) -> str:
+        if self.user:
+            return self.user.org_name or self.user.display_name or "Donor"
+        return "Donor"
+
     def __repr__(self) -> str:
         return f"<Donor id={self.id} kind={self.kind} address={self.address[:30]}>"

@@ -13,6 +13,7 @@ from app.api.v1.routes import (
     claims,
     devices,
     donations,
+    forecast,
     impact,
     offers,
     review_queue,
@@ -35,4 +36,5 @@ router.include_router(routes.router)
 router.include_router(agent.router)
 router.include_router(sms.router)
 router.include_router(impact.router)
+router.include_router(forecast.router)
 router.include_router(ws.router)

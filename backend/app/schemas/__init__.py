@@ -21,6 +21,18 @@ from app.schemas.donation import (
     ReviewQueueRead,
     ReviewResolve,
 )
+from app.schemas.forecast import (
+    AggregateForecastDay,
+    AggregateForecastRead,
+    DonorForecastDay,
+    DonorForecastRead,
+    ForecastBenchmarkResponse,
+    ForecastGenerateRequest,
+    ForecastGenerateResponse,
+    ForecastMetricsItem,
+    ForecastPromptTriggerRequest,
+    ForecastPromptTriggerResponse,
+)
 from app.schemas.impact import (
     ImpactFactorDetail,
     ImpactMethodologyRead,
@@ -78,4 +90,14 @@ __all__ = [
     "ImpactTimeseriesPoint",
     "ImpactTimeseriesRead",
     "ImpactReconciliationRead",
+    "DonorForecastDay",
+    "DonorForecastRead",
+    "AggregateForecastDay",
+    "AggregateForecastRead",
+    "ForecastGenerateRequest",
+    "ForecastGenerateResponse",
+    "ForecastMetricsItem",
+    "ForecastBenchmarkResponse",
+    "ForecastPromptTriggerRequest",
+    "ForecastPromptTriggerResponse",
 ]

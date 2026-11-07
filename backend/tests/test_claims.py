@@ -109,7 +109,7 @@ async def test_claim_lifecycle_pickup_and_impact(client: AsyncClient) -> None:
         )
 
         offers_resp = await client.get(
-            "/v1/offers?radius_km=30.0",
+            "/v1/offers?radius_km=30.0&limit=100",
             headers=recip_headers,
         )
         assert offers_resp.status_code == 200
@@ -224,6 +224,6 @@ async def test_decline_claim_reverts_donation_to_open(client: AsyncClient) -> No
         assert decline_resp.status_code == 200
 
         # 4. Check donation is open again
-        offers_resp = await client.get("/v1/offers", headers=recip_headers)
+        offers_resp = await client.get("/v1/offers?limit=100", headers=recip_headers)
         assert offers_resp.status_code == 200
         assert any(o["id"] == don_id for o in offers_resp.json())

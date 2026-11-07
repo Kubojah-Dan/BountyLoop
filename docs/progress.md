@@ -1,6 +1,6 @@
 # BountyLoop Implementation Progress
 
-## Current Phase: Phase 10 — Impact Measurement & Methodology
+## Current Phase: Phase 11 — Surplus Forecasting (SARIMAX / LightGBM)
 ## Status: PHASE_COMPLETE ✅
 **Date:** 2026-11-07
 **Branch:** `main`
@@ -593,16 +593,53 @@ tests/test_impact.py::test_impact_reconciliation_endpoint PASSED         [100%]
 
 ---
 
-## Next Phase: Phase 11 — Surplus Forecasting (SARIMAX / LightGBM)
+## Phase 11 Progress — Surplus Forecasting (SARIMAX / LightGBM)
 
-1. Synthetic daily donation time series generation with weekday/weekend seasonality and weather shocks.
-2. SARIMAX statistical baseline model and LightGBM gradient boosted tree comparison.
-3. Walk-forward cross-validation evaluated on MAE, RMSE, and MAPE against a naive 7-day seasonal baseline.
-4. Forecast inference service with feature-flagged donor reminder prompts (`FORECAST_PROMPTS_ENABLED`).
+### Acceptance Checklist & Verification
 
-1. FAO meal-equivalent calculations and CO₂e avoidance methodology validation.
-2. Verified vs unverified impact tracking in database (`impact_logs` table) and donor/recipient aggregation endpoints.
-3. Flutter impact celebration cards and community milestone badges.
+| Criterion | Status | Evidence / Verification |
+|---|---|---|
+| Synthetic Dataset Generation | `PASS ✅` | Implemented in `ml/src/data/synthetic_surplus.py`. Multi-donor simulation with weekly seasonality (weekend & Friday surges), holiday shocks, weather covariates (temperature sinusoid, zero-inflated rain), and multiplicative log-normal noise. Every record is explicitly labeled `is_synthetic = True` with `data_provenance = "SYNTHETIC_GENERATOR_V1"`. |
+| Rolling Walk-Forward Protocol | `PASS ✅` | Implemented in `ml/src/models/forecaster.py`. Strictly prohibits random shuffling or future data leakage. Evaluates on rolling 7-day horizons stepping forward by 7 days across 12 consecutive folds ($N=84$ evaluation points). |
+| Benchmark Comparison & Baseline | `PASS ✅` | Evaluated on synthetic donor streams. Both SARIMAX ($MAE=0.487\text{ kg}$, $RMSE=0.624\text{ kg}$, $MAPE=2.50\%$) and LightGBM ($MAE=2.690\text{ kg}$, $RMSE=3.193\text{ kg}$, $MAPE=14.07\%$) outperform the 7-day seasonal persistence baseline ($MAE=3.209\text{ kg}$, $RMSE=4.122\text{ kg}$, $MAPE=15.96\%$). |
+| Database Persistence & Schema | `PASS ✅` | Migration `004_donor_surplus_forecasts.py` applied. Table `donor_surplus_forecasts` stores multi-day forward projections with confidence intervals, model versions, and a unique constraint on `(donor_id, forecast_date, model_version)` ensuring single-slot idempotency. |
+| Auditable REST Endpoints | `PASS ✅` | Mounted in `backend/app/api/v1/routes/forecast.py`: `GET /v1/forecast/donor/{id}`, `GET /v1/forecast/aggregate`, `POST /v1/forecast/generate`, `GET /v1/forecast/metrics`, and `POST /v1/forecast/prompts/trigger`. |
+| Feature Flag Isolation | `PASS ✅` | `FORECAST_PROMPTS_ENABLED = False` (default) safely no-ops donor reminder triggers with zero side effects on matching, claims, or donations. When toggled `True`, qualifies high-surplus donors and queues evening reminder prompts. |
+| Agent Routing Hook | `PASS ✅` | `tool_query_surplus_forecast` added to `backend/app/agent/tools.py` enabling the autonomous coordinator to ingest forward surplus estimates as operational routing hints. |
+| Documentation | `PASS ✅` | Comprehensive model card, validation protocol, mathematical formulation, and transition criteria documented in `docs/models.md`. |
+| Test Suites & Regressions | `PASS ✅` | **92 / 92 backend tests passing** in Docker; **7 / 7 ML tests passing**; **10 / 10 Flutter tests passing** with 0 analyze issues; 99 files formatted and clean under Ruff. |
+
+### Backend Pytest Suite Execution Summary (`docker exec bountyloop_api pytest tests/ -q`)
+
+```text
+........................................................................ [ 78%]
+....................                                                     [100%]
+92 passed in 42.23s
+```
+
+### ML Test Suite Execution Summary (`py -3.10 -m pytest ml/tests/test_forecaster_ml.py -v`)
+
+```text
+ml/tests/test_forecaster_ml.py::test_synthetic_surplus_generation_structure_and_labels PASSED [ 14%]
+ml/tests/test_forecaster_ml.py::test_synthetic_seasonality_patterns PASSED [ 28%]
+ml/tests/test_forecaster_ml.py::test_multi_donor_dataset_generation PASSED [ 42%]
+ml/tests/test_forecaster_ml.py::test_naive_seasonal_baseline PASSED      [ 57%]
+ml/tests/test_forecaster_ml.py::test_sarimax_forecaster_fit_and_predict PASSED [ 71%]
+ml/tests/test_forecaster_ml.py::test_lightgbm_forecaster_fit_and_predict PASSED [ 85%]
+ml/tests/test_forecaster_ml.py::test_walk_forward_evaluation_beats_naive_baseline PASSED [100%]
+
+============================== 7 passed in 16.55s ==============================
+```
+
+---
+
+## Next Phase: Phase 12 — Hardening: Offline Mobile, Privacy, Security & Observability
+
+1. **Offline-First Mobile:** SQLite outbox (`sqflite`), background sync queue, idempotency key verification.
+2. **Privacy Enforcement:** Client and server-side EXIF/GPS stripping, donor consent toggle, and `DELETE /v1/me/data` retention purge workflow.
+3. **Security Safeguards:** Magic byte upload validation, dimension caps, decompression-bomb defense, rate limiting, and dependency vulnerability scans.
+4. **Observability & Health:** Structured JSON logging, Prometheus metrics (`GET /metrics`), Sentry integration, and deep `/healthz` dependency check.
+
 
 
 

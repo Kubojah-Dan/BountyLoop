@@ -21,6 +21,7 @@ from app.db.models.enums import (
     ReviewStatus,
     UserRole,
 )
+from app.db.models.forecast import DonorSurplusForecast
 from app.db.models.impact import ImpactLog
 from app.db.models.recipient import Recipient
 from app.db.models.review_queue import ReviewQueue
@@ -36,6 +37,7 @@ __all__ = [
     "Donation",
     "Claim",
     "ImpactLog",
+    "DonorSurplusForecast",
     "AgentEvent",
     "ReviewQueue",
     "SmsMessage",

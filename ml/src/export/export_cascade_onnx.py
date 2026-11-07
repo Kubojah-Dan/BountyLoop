@@ -40,7 +40,9 @@ def export_model_to_onnx(
 
     dummy_input = torch.randn(1, 3, 224, 224, dtype=torch.float32)
 
-    logger.info("Exporting model to ONNX at %s (opset %d)...", output_path, opset_version)
+    logger.info(
+        "Exporting model to ONNX at %s (opset %d)...", output_path, opset_version
+    )
     try:
         torch.onnx.export(
             model,
@@ -134,7 +136,9 @@ def export_all_cascade_models(output_dir: Path) -> dict[str, Path]:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Export BountyLoop Cascade Models to ONNX")
+    parser = argparse.ArgumentParser(
+        description="Export BountyLoop Cascade Models to ONNX"
+    )
     parser.add_argument(
         "--output-dir",
         type=Path,

@@ -2,6 +2,14 @@
 
 from app.services.communication import COMMUNICATION_DISPATCH_LOG, communication_bus
 from app.services.cv_client import cv_client
+from app.services.forecast import (
+    generate_batch_forecasts,
+    generate_donor_forecasts,
+    get_aggregate_forecast,
+    get_donor_forecast,
+    get_forecast_benchmark_metrics,
+    trigger_forecast_prompts,
+)
 from app.services.freshness_rules import calculate_expiry, get_hours_to_spoil
 from app.services.impact import (
     co2e_avoided,
@@ -33,6 +41,12 @@ __all__ = [
     "get_impact_timeseries",
     "generate_impact_csv",
     "reconcile_impact",
+    "generate_donor_forecasts",
+    "get_donor_forecast",
+    "get_aggregate_forecast",
+    "generate_batch_forecasts",
+    "get_forecast_benchmark_metrics",
+    "trigger_forecast_prompts",
     "append_label_record",
     "ws_manager",
     "notification_service",

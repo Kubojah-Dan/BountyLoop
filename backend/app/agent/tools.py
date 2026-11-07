@@ -32,6 +32,7 @@ from app.db.models import (
     ReviewStatus,
 )
 from app.services.communication import communication_bus
+from app.services.forecast import get_donor_forecast
 from app.services.matching import get_recipient_consecutive_wins, matching_engine
 from app.services.notification import notification_service
 from app.services.websocket_manager import ws_manager
@@ -330,3 +331,26 @@ async def tool_log_agent_event(
         "Persisted AgentEvent '%s' (id=%s) for donation=%s", event_type, event.id, donation_id
     )
     return event
+
+
+async def tool_query_surplus_forecast(
+    donor_id: uuid.UUID,
+    horizon_days: int = 7,
+    db: AsyncSession | None = None,
+) -> dict[str, Any]:
+    """Query forward surplus projections for a donor as an operational routing hint."""
+    if db is None:
+        raise ValueError("Database session required for querying surplus forecast")
+
+    forecast = await get_donor_forecast(db=db, donor_id=donor_id, horizon_days=horizon_days)
+    if not forecast:
+        return {"error": f"Donor '{donor_id}' not found", "forecasts": []}
+
+    return {
+        "donor_id": str(donor_id),
+        "donor_name": forecast.donor_name,
+        "total_predicted_kg": forecast.total_predicted_kg,
+        "is_synthetic": forecast.is_synthetic,
+        "forecasts": [f.model_dump() for f in forecast.forecasts],
+        "operational_hint": "Use for route scheduling and vehicle capacity planning only. Not guaranteed food inventory.",
+    }
