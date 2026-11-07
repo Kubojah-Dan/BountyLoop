@@ -104,7 +104,51 @@ class ProfileScreen extends ConsumerWidget {
                       children: [
                         _buildStat('42.5 kg', 'Food Saved'),
                         _buildStat('~35', 'Meals Fit'),
-                        _buildStat('106 kg', 'CO2e Prevented'),
+                        _buildStat('106 kg*', 'CO2e Avoided'),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      '* Modeled landfill diversion estimate (EPA WARM / UNEP). Not laboratory-measured.',
+                      style: TextStyle(fontSize: 10, color: AppTheme.textMuted, fontStyle: FontStyle.italic),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Community Milestone Badges
+            Card(
+              margin: EdgeInsets.zero,
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Row(
+                      children: [
+                        Icon(Icons.military_tech, color: AppTheme.brandAmber, size: 20),
+                        SizedBox(width: 8),
+                        Text(
+                          'Community Milestones',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.textDark,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        _buildBadge('🌱 First Loop Closed', true),
+                        _buildBadge('🥗 25+ Meals Hero', true),
+                        _buildBadge('🌍 100 kg CO2e Avoided', true),
+                        _buildBadge('🏆 500 kg Gold Partner', false),
                       ],
                     ),
                   ],
@@ -200,6 +244,27 @@ class ProfileScreen extends ConsumerWidget {
           style: const TextStyle(fontSize: 12, color: AppTheme.textMuted),
         ),
       ],
+    );
+  }
+
+  Widget _buildBadge(String label, bool isUnlocked) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: isUnlocked ? AppTheme.brandGreen.withOpacity(0.08) : Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isUnlocked ? AppTheme.brandGreen.withOpacity(0.3) : Colors.grey.shade300,
+        ),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: isUnlocked ? AppTheme.brandGreen : Colors.grey.shade500,
+        ),
+      ),
     );
   }
 }

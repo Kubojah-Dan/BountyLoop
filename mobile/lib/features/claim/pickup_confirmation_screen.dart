@@ -226,12 +226,22 @@ class _PickupConfirmationScreenState extends ConsumerState<PickupConfirmationScr
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: AppTheme.cardBorder),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                child: Column(
                   children: [
-                    _buildMetricTile('${kg.toStringAsFixed(1)} kg', 'Food Rescued'),
-                    _buildMetricTile('~$meals', 'Meals Provided'),
-                    _buildMetricTile('${co2.toStringAsFixed(1)} kg', 'CO2e Avoided'),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _buildMetricTile('${kg.toStringAsFixed(1)} kg', 'Food Rescued'),
+                        _buildMetricTile('~$meals', 'Meals Provided'),
+                        _buildMetricTile('${co2.toStringAsFixed(1)} kg*', 'CO2e Avoided'),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      '* Modeled estimate based on landfill diversion factor (EPA WARM). Not laboratory-measured.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 10, color: AppTheme.textMuted, fontStyle: FontStyle.italic),
+                    ),
                   ],
                 ),
               ),

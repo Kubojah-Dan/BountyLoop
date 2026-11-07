@@ -1,8 +1,8 @@
 # BountyLoop Implementation Progress
 
-## Current Phase: Phase 9 — Twilio SMS Fallback & Communication Bus
+## Current Phase: Phase 10 — Impact Measurement & Methodology
 ## Status: PHASE_COMPLETE ✅
-**Date:** 2026-11-06
+**Date:** 2026-11-07
 **Branch:** `main`
 
 ---
@@ -550,7 +550,55 @@ tests/test_sms.py::test_sms_api_usage_and_manual_send PASSED             [100%]
 
 ---
 
-## Next Phase: Phase 10 — Impact Measurement & Methodology
+## Phase 10 Progress — Impact Measurement & Methodology
+
+### Acceptance Checklist & Verification
+
+| Criterion | Status | Evidence / Verification |
+|---|---|---|
+| Defensible Calculation Methodology | `PASS ✅` | Implemented in `backend/app/services/impact.py`. Rescued weight is empirical; meal equivalents follow USDA/FAO standard (`meal_kg_factor = 1.2 kg/meal`); greenhouse gas avoidance follows EPA WARM v15 / UNEP 2021 (`impact_co2e_factor = 2.5 kg CO₂e/kg`). |
+| Scientific Honesty & Estimate Disclosure | `PASS ✅` | CO₂e emissions avoided are explicitly flagged as an `UNVERIFIED estimate` across all schemas (`ImpactSummaryRead`, `ImpactTimeseriesPoint`), API endpoints, reports, and mobile screens. Documented in `docs/impact-methodology.md`. |
+| Single-Row Idempotency Contract | `PASS ✅` | Atomic upsert on `impact_log` enforced via unique constraint on `donation_id`. Retrying or repeating pickup confirmation (`POST /v1/claims/{id}/pickup`) yields exactly ONE `ImpactLog` row with identical metrics (`test_impact_single_row_idempotency_on_pickup`). |
+| Auditable API Endpoints | `PASS ✅` | Implemented in `backend/app/api/v1/routes/impact.py`: `GET /v1/impact/methodology` (factor citations), `GET /v1/impact/summary` (aggregated totals with donor/date filters), `GET /v1/impact/timeseries` (day/week/month buckets), `GET /v1/impact/export/csv` (downloadable tabular records), and `GET /v1/impact/reconciliation` (ledger reconciliation audit). |
+| SQL Reconciliation Audit | `PASS ✅` | Mathematical reconciliation endpoint verifies `COUNT(picked_up claims) == COUNT(completed donations) == COUNT(impact_log rows)` and `SUM(donation.est_weight_kg) == SUM(impact_log.kg_rescued)` with zero delta (`test_impact_reconciliation_endpoint`). Discrepancies (unlogged donations or orphans) are detected and flagged. |
+| Mobile Impact & Milestones | `PASS ✅` | Enhanced `mobile/lib/features/profile/profile_screen.dart` with community milestone badges and explicit estimate disclaimer footnote. Updated `mobile/lib/features/claim/pickup_confirmation_screen.dart` with modeled estimate attribution. |
+| Pilot Report Template | `PASS ✅` | Published full pilot report template with SQL audit tables and disclosure guidelines in `docs/impact-methodology.md`. |
+| Backend Pytest Suite | `PASS ✅` | 80 / 80 tests passing across full backend suite (including 10/10 dedicated tests in `test_impact.py`). |
+| Flutter App Suite & Analysis | `PASS ✅` | 10 / 10 tests passing in `mobile/test/`; `flutter analyze` reports 0 issues. |
+| Code Quality | `PASS ✅` | `ruff check` and `ruff format` clean with 0 warnings or errors across the backend codebase. |
+
+### Backend Test Suite Execution Summary (`docker exec bountyloop_api pytest tests/ -q`)
+
+```text
+................................................................................ [100%]
+80 passed in 28.09s
+```
+
+### Impact Test Suite Execution Summary (`tests/test_impact.py`)
+
+```text
+tests/test_impact.py::test_meals_equivalent_default_factor PASSED        [ 10%]
+tests/test_impact.py::test_co2e_avoided_default_factor PASSED            [ 20%]
+tests/test_impact.py::test_compute_donation_impact_payload PASSED        [ 30%]
+tests/test_impact.py::test_invalid_factors_raise_error PASSED            [ 40%]
+tests/test_impact.py::test_impact_methodology_endpoint PASSED            [ 50%]
+tests/test_impact.py::test_impact_single_row_idempotency_on_pickup PASSED [ 60%]
+tests/test_impact.py::test_impact_summary_endpoint_and_filters PASSED    [ 70%]
+tests/test_impact.py::test_impact_timeseries_endpoint PASSED             [ 80%]
+tests/test_impact.py::test_impact_csv_export_endpoint PASSED             [ 90%]
+tests/test_impact.py::test_impact_reconciliation_endpoint PASSED         [100%]
+
+============================== 10 passed in 4.96s ==============================
+```
+
+---
+
+## Next Phase: Phase 11 — Surplus Forecasting (SARIMAX / LightGBM)
+
+1. Synthetic daily donation time series generation with weekday/weekend seasonality and weather shocks.
+2. SARIMAX statistical baseline model and LightGBM gradient boosted tree comparison.
+3. Walk-forward cross-validation evaluated on MAE, RMSE, and MAPE against a naive 7-day seasonal baseline.
+4. Forecast inference service with feature-flagged donor reminder prompts (`FORECAST_PROMPTS_ENABLED`).
 
 1. FAO meal-equivalent calculations and CO₂e avoidance methodology validation.
 2. Verified vs unverified impact tracking in database (`impact_logs` table) and donor/recipient aggregation endpoints.

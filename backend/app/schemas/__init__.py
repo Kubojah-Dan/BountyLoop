@@ -21,6 +21,14 @@ from app.schemas.donation import (
     ReviewQueueRead,
     ReviewResolve,
 )
+from app.schemas.impact import (
+    ImpactFactorDetail,
+    ImpactMethodologyRead,
+    ImpactReconciliationRead,
+    ImpactSummaryRead,
+    ImpactTimeseriesPoint,
+    ImpactTimeseriesRead,
+)
 from app.schemas.sms import (
     InboundWebhookResponse,
     SmsSendRequest,
@@ -64,4 +72,10 @@ __all__ = [
     "SmsSendRequest",
     "SmsSendResponse",
     "InboundWebhookResponse",
+    "ImpactFactorDetail",
+    "ImpactMethodologyRead",
+    "ImpactSummaryRead",
+    "ImpactTimeseriesPoint",
+    "ImpactTimeseriesRead",
+    "ImpactReconciliationRead",
 ]

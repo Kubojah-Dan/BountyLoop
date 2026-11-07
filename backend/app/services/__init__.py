@@ -3,7 +3,16 @@
 from app.services.communication import COMMUNICATION_DISPATCH_LOG, communication_bus
 from app.services.cv_client import cv_client
 from app.services.freshness_rules import calculate_expiry, get_hours_to_spoil
-from app.services.impact import co2e_avoided, compute_donation_impact, meals_equivalent
+from app.services.impact import (
+    co2e_avoided,
+    compute_donation_impact,
+    generate_impact_csv,
+    get_impact_factors_metadata,
+    get_impact_summary,
+    get_impact_timeseries,
+    meals_equivalent,
+    reconcile_impact,
+)
 from app.services.label_store import append_label_record
 from app.services.notification import DISPATCHED_NOTIFICATIONS, notification_service
 from app.services.sms import DISPATCHED_SMS, twilio_sms_client
@@ -19,6 +28,11 @@ __all__ = [
     "meals_equivalent",
     "co2e_avoided",
     "compute_donation_impact",
+    "get_impact_factors_metadata",
+    "get_impact_summary",
+    "get_impact_timeseries",
+    "generate_impact_csv",
+    "reconcile_impact",
     "append_label_record",
     "ws_manager",
     "notification_service",

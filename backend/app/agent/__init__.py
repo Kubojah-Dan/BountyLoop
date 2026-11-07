@@ -13,4 +13,3 @@ from __future__ import annotations
 from app.agent.coordinator import AutonomousRescueAgent, rescue_agent
 
 __all__ = ["AutonomousRescueAgent", "rescue_agent"]
-

@@ -33,4 +33,3 @@ Observation: The output from the tool execution.
 ... (repeat Thought/Action/Action Input/Observation as needed)
 Final Decision: Summary of the final decision and operational outcome.
 """
-

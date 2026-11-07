@@ -113,4 +113,3 @@ async def list_agent_events(
     query = query.limit(limit).offset(offset)
     results = (await db.execute(query)).scalars().all()
     return [AgentEventRead.model_validate(event) for event in results]
-

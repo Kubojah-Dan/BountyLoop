@@ -72,4 +72,3 @@ class AgentEventRead(BaseModel):
     model: str
     latency_ms: int
     created_at: datetime
-
