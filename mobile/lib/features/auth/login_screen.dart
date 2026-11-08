@@ -12,19 +12,21 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  final _emailController = TextEditingController(text: 'donor@bountyloop.org');
-  String _selectedRole = 'donor';
+  final _emailController = TextEditingController(text: 'hearth.bakery@bountyloop.org');
+  final _passwordController = TextEditingController(text: '••••••••');
+  bool _obscurePassword = true;
   bool _isLoading = false;
   String? _errorMessage;
 
   @override
   void dispose() {
     _emailController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
-  Future<void> _handleLogin() async {
-    final email = _emailController.text.trim();
+  Future<void> _handleLogin({String? overrideEmail, String? role, String? displayName}) async {
+    final email = (overrideEmail ?? _emailController.text).trim();
     if (email.isEmpty) {
       setState(() => _errorMessage = 'Please enter an email');
       return;
@@ -36,14 +38,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     });
 
     try {
+      final userRole = role ?? (email.contains('pantry') ? 'recipient' : 'donor');
       await ref.read(authProvider.notifier).signIn(
             email: email,
-            role: _selectedRole,
-            displayName: email.split('@').first,
+            role: userRole,
+            displayName: displayName ?? (userRole == 'donor' ? 'Hearth Bakery' : 'St Mark\'s Pantry'),
           );
 
       if (!mounted) return;
-      if (_selectedRole == 'donor') {
+      if (userRole == 'donor') {
         context.go('/donate');
       } else {
         context.go('/offers');
@@ -57,200 +60,340 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
-  void _quickFill(String email, String role) {
-    setState(() {
-      _emailController.text = email;
-      _selectedRole = role;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppTheme.surfaceLight,
       body: SafeArea(
         child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Brand Header
-                Container(
-                  width: 90,
-                  height: 90,
-                  decoration: BoxDecoration(
-                    color: AppTheme.brandGreen.withOpacity(0.1),
-                    shape: BoxShape.circle,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // 1. Top Branding Header
+                  Row(
+                    children: [
+                      Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: AppTheme.brandGreen,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Center(
+                          child: Icon(
+                            Icons.eco_rounded,
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'BountyLoop',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
+                          color: AppTheme.textDark,
+                          letterSpacing: -0.3,
+                        ),
+                      ),
+                    ],
                   ),
-                  child: const Center(
-                    child: Icon(
-                      Icons.recycling_rounded,
-                      size: 54,
-                      color: AppTheme.brandGreen,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'BountyLoop',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.w800,
-                    color: AppTheme.brandGreen,
-                    letterSpacing: -0.5,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                const Text(
-                  'Turn surplus into supper — the AI food rescue loop',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppTheme.textMuted,
-                  ),
-                ),
-                const SizedBox(height: 36),
+                  const SizedBox(height: 16),
 
-                // Role selection chips
-                const Text(
-                  'Select Your Account Type',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.textDark,
+                  // 2. Hero Image with Tag
+                  Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(20),
+                        child: Image.asset(
+                          'assets/images/vegetable_crate.jpg',
+                          height: 180,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              height: 180,
+                              color: AppTheme.brandGreenLight,
+                              child: const Center(
+                                child: Icon(Icons.shopping_basket_rounded, size: 48, color: AppTheme.brandGreen),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      Positioned(
+                        bottom: 12,
+                        left: 12,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.92),
+                            borderRadius: BorderRadius.circular(30),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.08),
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.eco_outlined, size: 14, color: AppTheme.brandGreen),
+                              SizedBox(width: 6),
+                              Text(
+                                'Good food. A better next chapter.',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppTheme.textDark,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: ChoiceChip(
-                        label: const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.storefront_outlined, size: 18),
-                            SizedBox(width: 6),
-                            Text('Donor'),
-                          ],
-                        ),
-                        selected: _selectedRole == 'donor',
-                        selectedColor: AppTheme.brandGreen.withOpacity(0.15),
-                        labelStyle: TextStyle(
-                          color: _selectedRole == 'donor'
-                              ? AppTheme.brandGreen
-                              : AppTheme.textMuted,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        onSelected: (selected) {
-                          if (selected) setState(() => _selectedRole = 'donor');
-                        },
+                  const SizedBox(height: 20),
+
+                  // 3. Headline & Description
+                  const Text(
+                    'More shared. Less wasted.',
+                    style: TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.w800,
+                      color: AppTheme.textDark,
+                      letterSpacing: -0.5,
+                      height: 1.15,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Connect surplus food with the people who can use it. Welcome to your local loop.',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: AppTheme.textMuted,
+                      height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  if (_errorMessage != null) ...[
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppTheme.dangerRedLight,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppTheme.dangerRed.withOpacity(0.3)),
+                      ),
+                      child: Text(
+                        _errorMessage!,
+                        style: const TextStyle(color: AppTheme.dangerRed, fontSize: 12),
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ChoiceChip(
-                        label: const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.volunteer_activism_outlined, size: 18),
-                            SizedBox(width: 6),
-                            Text('Recipient'),
-                          ],
-                        ),
-                        selected: _selectedRole == 'recipient',
-                        selectedColor: AppTheme.brandAmber.withOpacity(0.18),
-                        labelStyle: TextStyle(
-                          color: _selectedRole == 'recipient'
-                              ? AppTheme.brandAmber
-                              : AppTheme.textMuted,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        onSelected: (selected) {
-                          if (selected) setState(() => _selectedRole = 'recipient');
-                        },
-                      ),
-                    ),
+                    const SizedBox(height: 16),
                   ],
-                ),
-                const SizedBox(height: 20),
 
-                // Email field
-                TextField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
-                    labelText: 'Work Email Address',
-                    prefixIcon: Icon(Icons.email_outlined, color: AppTheme.textMuted),
+                  // 4. Form Fields
+                  const Text(
+                    'Email address',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.textDark),
                   ),
-                ),
-                if (_errorMessage != null) ...[
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: AppTheme.dangerRed.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
+                  const SizedBox(height: 6),
+                  TextField(
+                    controller: _emailController,
+                    decoration: const InputDecoration(
+                      hintText: 'you@organisation.org',
                     ),
-                    child: Text(
-                      _errorMessage!,
-                      style: const TextStyle(color: AppTheme.dangerRed, fontSize: 13),
+                  ),
+                  const SizedBox(height: 14),
+
+                  const Text(
+                    'Password',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.textDark),
+                  ),
+                  const SizedBox(height: 6),
+                  TextField(
+                    controller: _passwordController,
+                    obscureText: _obscurePassword,
+                    decoration: InputDecoration(
+                      hintText: 'Enter your password',
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                          size: 18,
+                          color: AppTheme.textMuted,
+                        ),
+                        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                      ),
                     ),
+                  ),
+                  const SizedBox(height: 8),
+
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () {},
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: const Text(
+                        'Forgot password?',
+                        style: TextStyle(color: AppTheme.brandGreen, fontSize: 12, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // 5. Sign In Button
+                  ElevatedButton(
+                    onPressed: _isLoading ? null : () => _handleLogin(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.brandGreen,
+                    ),
+                    child: _isLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                          )
+                        : const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text('Sign in'),
+                              SizedBox(width: 8),
+                              Icon(Icons.arrow_forward_rounded, size: 16),
+                            ],
+                          ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // 6. Demo Explorer Divider
+                  const Row(
+                    children: [
+                      Expanded(child: Divider(color: AppTheme.cardBorder)),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 12),
+                        child: Text(
+                          'OR EXPLORE A DEMO',
+                          style: TextStyle(
+                            fontSize: 10,
+                            letterSpacing: 1.2,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.textMuted,
+                          ),
+                        ),
+                      ),
+                      Expanded(child: Divider(color: AppTheme.cardBorder)),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // 7. Side-by-Side Demo Cards
+                  Row(
+                    children: [
+                      Expanded(
+                        child: InkWell(
+                          onTap: () => _handleLogin(
+                            overrideEmail: 'hearth.bakery@bountyloop.org',
+                            role: 'donor',
+                            displayName: 'Hearth Bakery',
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                          child: Container(
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                              color: AppTheme.brandGreenLight.withOpacity(0.6),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: AppTheme.cardBorder),
+                            ),
+                            child: const Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Icon(Icons.storefront_outlined, size: 20, color: AppTheme.brandGreen),
+                                    Icon(Icons.north_east_rounded, size: 14, color: AppTheme.brandGreen),
+                                  ],
+                                ),
+                                SizedBox(height: 10),
+                                Text(
+                                  'Donor',
+                                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.brandGreen),
+                                ),
+                                SizedBox(height: 2),
+                                Text(
+                                  'Hearth Bakery',
+                                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppTheme.textDark),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: InkWell(
+                          onTap: () => _handleLogin(
+                            overrideEmail: 'maya@stmarkspantry.org',
+                            role: 'recipient',
+                            displayName: 'St Mark\'s Pantry',
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                          child: Container(
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                              color: AppTheme.brandAmberLight,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: AppTheme.cardBorder),
+                            ),
+                            child: const Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Icon(Icons.volunteer_activism_outlined, size: 20, color: AppTheme.brandAmber),
+                                    Icon(Icons.north_east_rounded, size: 14, color: AppTheme.brandAmber),
+                                  ],
+                                ),
+                                SizedBox(height: 10),
+                                Text(
+                                  'Recipient Pantry',
+                                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.brandAmber),
+                                ),
+                                SizedBox(height: 2),
+                                Text(
+                                  'St Mark\'s Pantry',
+                                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppTheme.textDark),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+
+                  // 8. Footer
+                  const Text(
+                    'By continuing, you agree to our Terms & Privacy Policy. Demo roles use sample data.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 11, color: AppTheme.textMuted, height: 1.3),
                   ),
                 ],
-                const SizedBox(height: 24),
-
-                // Sign in button
-                ElevatedButton(
-                  onPressed: _isLoading ? null : _handleLogin,
-                  child: _isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.5,
-                            color: Colors.white,
-                          ),
-                        )
-                      : Text(
-                          _selectedRole == 'donor'
-                              ? 'Continue as Food Donor'
-                              : 'Continue as Food Rescue Partner',
-                        ),
-                ),
-                const SizedBox(height: 28),
-
-                // Fast test accounts
-                const Divider(),
-                const SizedBox(height: 12),
-                const Text(
-                  'Quick Demo Logins (Pilot Mode)',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.textMuted,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    TextButton.icon(
-                      onPressed: () => _quickFill('donor@bountyloop.org', 'donor'),
-                      icon: const Icon(Icons.apple, size: 16),
-                      label: const Text('Jane\'s Bakery (Donor)'),
-                    ),
-                    const SizedBox(width: 8),
-                    TextButton.icon(
-                      onPressed: () => _quickFill('foodbank@bountyloop.org', 'recipient'),
-                      icon: const Icon(Icons.food_bank_outlined, size: 16),
-                      label: const Text('Austin Hub (Recipient)'),
-                    ),
-                  ],
-                ),
-              ],
+              ),
             ),
           ),
         ),
@@ -258,4 +401,3 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 }
-

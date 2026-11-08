@@ -25,6 +25,37 @@ class BountyLoopApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       routerConfig: router,
+      builder: (context, child) {
+        // Provide centered mobile frame on desktop/web viewports (>500px)
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            if (constraints.maxWidth > 500) {
+              return Scaffold(
+                backgroundColor: const Color(0xFFF0EFEA),
+                body: Center(
+                  child: Container(
+                    constraints: const BoxConstraints(maxWidth: 440),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(28),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.08),
+                          blurRadius: 36,
+                          offset: const Offset(0, 14),
+                        ),
+                      ],
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: child ?? const SizedBox.shrink(),
+                  ),
+                ),
+              );
+            }
+            return child ?? const SizedBox.shrink();
+          },
+        );
+      },
     );
   }
 }

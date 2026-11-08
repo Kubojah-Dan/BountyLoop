@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Verdure — Plant Care</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ===========================================================
+     Shared iPhone Frame + Showcase Layout
+     =========================================================== */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    width: 100%;
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', sans-serif;
+  }
+
+  .showcase {
+    width: 100%;
+    min-height: 100vh;
+    padding: 56px 36px 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+  }
+
+  .showcase-header {
+    width: 100%;
+    max-width: 1600px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 72px;
+  }
+
+  .showcase-eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    font-weight: 500;
+    opacity: 0.55;
+  }
+
+  .showcase-title {
+    font-size: clamp(40px, 5vw, 72px);
+    line-height: 0.98;
+    letter-spacing: -0.03em;
+    font-weight: 500;
+    margin-top: 16px;
+    max-width: 720px;
+  }
+
+  .showcase-meta {
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    opacity: 0.5;
+    text-align: right;
+    line-height: 1.7;
+  }
+
+  .phone-rail-outer {
+    width: 100%;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+  .phone-rail {
+    display: flex;
+    align-items: flex-start;
+    gap: 24px;
+    flex-wrap: nowrap;
+    padding: 0 36px 12px;
+    width: max-content;
+    min-width: 100%;
+    justify-content: center;
+    margin: 0 auto;
+  }
+
+  .phone {
+    --phone-w: 320px;
+    --phone-h: 695px;
+    width: var(--phone-w);
+    height: var(--phone-h);
+    flex-shrink: 0;
+    background: #0a0a0a;
+    border-radius: 50px;
+    padding: 10px;
+    box-shadow:
+      0 0 0 1.5px rgba(255,255,255,0.06),
+      0 40px 80px -24px rgba(0,0,0,0.45),
+      0 24px 48px -12px rgba(0,0,0,0.3);
+    position: relative;
+  }
+
+  .phone-wrap {
+    width: var(--phone-w, 320px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 0 0 auto;
+  }
+
+  .phone-screen {
+    width: 100%;
+    height: 100%;
+    border-radius: 40px;
+    overflow: hidden;
+    position: relative;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .phone-screen::before {
+    content: '';
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 30px;
+    background: #000;
+    border-radius: 16px;
+    z-index: 100;
+  }
+
+  .status-bar {
+    height: 50px;
+    padding: 16px 28px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    font-size: 14px;
+    font-weight: 600;
+    color: inherit;
+    flex-shrink: 0;
+    z-index: 50;
+  }
+
+  .status-bar .status-icons {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+  }
+
+  .status-bar svg {
+    width: 18px;
+    height: 12px;
+  }
+
+  .home-indicator {
+    position: absolute;
+    bottom: 9px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 140px;
+    height: 4px;
+    background: currentColor;
+    opacity: 0.35;
+    border-radius: 2px;
+    z-index: 100;
+  }
+
+  .phone-caption {
+    margin-top: 22px;
+    text-align: center;
+    font-size: 11px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    opacity: 0.45;
+    font-weight: 500;
+    pointer-events: none;
+  }
+
+  .showcase-footer {
+    width: 100%;
+    max-width: 1600px;
+    margin-top: 120px;
+    padding-top: 32px;
+    border-top: 1px solid currentColor;
+    border-top-color: rgba(128,128,128,0.15);
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 48px;
+    font-size: 12px;
+    line-height: 1.7;
+  }
+
+  .footer-block-label {
+    font-size: 10px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    opacity: 0.5;
+    margin-bottom: 12px;
+  }
+
+  .swatches {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .swatch {
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    position: relative;
+  }
+
+  *::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }
+  * { scrollbar-width: none !important; -ms-overflow-style: none !important; }
+  html, body { scrollbar-width: none !important; -ms-overflow-style: none !important; }
+  html::-webkit-scrollbar, body::-webkit-scrollbar { display: none !important; }
+
+  .status-bar-signal {
+    display: inline-flex;
+    gap: 2px;
+    align-items: flex-end;
+  }
+  .status-bar-signal i {
+    width: 3px;
+    background: currentColor;
+    border-radius: 1px;
+    display: inline-block;
+  }
+  .status-bar-signal i:nth-child(1) { height: 4px; }
+  .status-bar-signal i:nth-child(2) { height: 6px; }
+  .status-bar-signal i:nth-child(3) { height: 8px; }
+  .status-bar-signal i:nth-child(4) { height: 10px; }
+
+  /* ===========================================================
+     Verdure — Plant Care theme
+     =========================================================== */
+  :root {
+    --cream: #f0ead8;
+    --cream-2: #e3dcc3;
+    --moss: #4a5d3a;
+    --moss-deep: #2d3a23;
+    --terra: #b67148;
+    --soil: #6b4a31;
+    --ink: #1f2418;
+  }
+  body { background: var(--cream); color: var(--ink); font-family: 'Nunito', sans-serif; }
+  .brand-mark { font-family: 'Lora', serif; font-size: 32px; font-style: italic; font-weight: 500; }
+  .brand-mark::before { content: '❋'; color: var(--moss); margin-right: 8px; font-style: normal; }
+  .showcase-title { font-family: 'Lora', serif; font-weight: 400; letter-spacing: -0.01em; }
+  .showcase-title em { font-style: italic; color: var(--moss); }
+
+  .phone-screen { background: var(--cream); color: var(--ink); }
+
+  /* ===== Screen 1: Garden home ===== */
+  .s-garden { padding: 60px 22px 30px; flex: 1; overflow: hidden; }
+  .g-greet { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; opacity: 0.55; }
+  .g-h { font-family: 'Lora', serif; font-size: 28px; font-weight: 400; letter-spacing: -0.01em; line-height: 1.05; margin: 4px 0 6px; }
+  .g-h em { font-style: italic; color: var(--moss); }
+  .g-sub { font-size: 11px; opacity: 0.7; margin-bottom: 18px; }
+  .g-status { display: flex; justify-content: space-between; background: var(--moss); color: #fff; padding: 14px 16px; border-radius: 14px; margin-bottom: 14px; }
+  .g-stat { text-align: center; flex: 1; }
+  .g-stat .v { font-family: 'Lora', serif; font-style: italic; font-size: 22px; font-weight: 500; }
+  .g-stat .l { font-size: 9px; letter-spacing: 0.2em; opacity: 0.85; text-transform: uppercase; margin-top: 2px; }
+  .g-stat + .g-stat { border-left: 1px solid rgba(255,255,255,0.2); }
+  .g-section-h { font-family: 'Lora', serif; font-style: italic; font-size: 17px; margin: 6px 0 10px; }
+  .g-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .g-card { background: var(--cream-2); border-radius: 14px; overflow: hidden; }
+  .g-card img { width: 100%; aspect-ratio: 1; object-fit: cover; }
+  .g-card .info { padding: 10px 12px; }
+  .g-card .nm { font-family: 'Lora', serif; font-style: italic; font-size: 14px; line-height: 1.05; }
+  .g-card .next { font-size: 10px; opacity: 0.65; margin-top: 3px; letter-spacing: 0.04em; }
+  .g-card .next.due { color: var(--terra); font-weight: 600; }
+  .g-card .next::before { content: '💧 '; }
+  .g-card .next.due::before { content: '!'; background: var(--terra); color: #fff; border-radius: 50%; width: 14px; height: 14px; display: inline-flex; align-items: center; justify-content: center; font-size: 9px; margin-right: 4px; }
+
+  /* ===== Screen 2: Plant detail ===== */
+  .s-plant { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+  .p-img { height: 260px; background: url('assets/plant-monstera.jpg') center/cover; position: relative; }
+  .p-img .back { position: absolute; top: 60px; left: 18px; background: rgba(255,255,255,0.85); border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-size: 16px; backdrop-filter: blur(20px); }
+  .p-img .fav { position: absolute; top: 60px; right: 18px; background: rgba(255,255,255,0.85); border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-size: 16px; backdrop-filter: blur(20px); }
+  .p-body { padding: 20px 22px; flex: 1; overflow: hidden; }
+  .p-sci { font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--moss); margin-bottom: 4px; }
+  .p-name { font-family: 'Lora', serif; font-size: 26px; font-weight: 500; line-height: 1.05; }
+  .p-name em { font-style: italic; }
+  .p-attrs { display: flex; gap: 14px; padding: 14px 0; margin-top: 14px; border-top: 1px solid rgba(31,36,24,0.12); border-bottom: 1px solid rgba(31,36,24,0.12); }
+  .p-attr { flex: 1; }
+  .p-attr .ic { font-size: 18px; color: var(--moss); }
+  .p-attr .l { font-size: 9px; opacity: 0.55; letter-spacing: 0.15em; text-transform: uppercase; margin-top: 4px; }
+  .p-attr .v { font-family: 'Lora', serif; font-style: italic; font-size: 14px; margin-top: 2px; font-weight: 500; }
+  .p-next { background: var(--moss); color: #fff; border-radius: 14px; padding: 14px; margin-top: 14px; display: flex; justify-content: space-between; align-items: center; }
+  .p-next .l { font-size: 10px; letter-spacing: 0.18em; opacity: 0.85; text-transform: uppercase; }
+  .p-next .v { font-family: 'Lora', serif; font-style: italic; font-size: 17px; margin-top: 3px; }
+  .p-next .cta { background: var(--terra); padding: 8px 14px; border-radius: 30px; font-size: 11px; letter-spacing: 0.05em; font-weight: 600; }
+
+  /* ===== Screen 3: Watering schedule ===== */
+  .s-water { padding: 60px 22px 30px; flex: 1; overflow: hidden; }
+  .w-h { font-family: 'Lora', serif; font-size: 26px; font-weight: 400; letter-spacing: -0.01em; }
+  .w-h em { font-style: italic; color: var(--moss); }
+  .w-sub { font-size: 11px; opacity: 0.65; margin-top: 4px; margin-bottom: 18px; }
+  .w-week { display: flex; justify-content: space-between; margin-bottom: 18px; gap: 6px; }
+  .w-day { flex: 1; text-align: center; background: var(--cream-2); border-radius: 12px; padding: 10px 4px; }
+  .w-day.today { background: var(--moss); color: #fff; }
+  .w-day .d { font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; opacity: 0.7; }
+  .w-day .n { font-family: 'Lora', serif; font-style: italic; font-size: 17px; font-weight: 500; margin-top: 3px; }
+  .w-day .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--terra); margin: 4px auto 0; opacity: 0; }
+  .w-day.has .dot { opacity: 1; }
+  .w-section-h { font-family: 'Lora', serif; font-style: italic; font-size: 16px; margin-bottom: 10px; }
+  .w-row { display: flex; gap: 12px; padding: 10px 0; border-top: 1px solid rgba(31,36,24,0.1); align-items: center; }
+  .w-row:first-of-type { border-top: 1px solid rgba(31,36,24,0.25); }
+  .w-row img { width: 50px; height: 50px; object-fit: cover; border-radius: 50%; flex-shrink: 0; }
+  .w-info { flex: 1; }
+  .w-info .nm { font-family: 'Lora', serif; font-style: italic; font-size: 15px; font-weight: 500; }
+  .w-info .where { font-size: 10px; opacity: 0.55; letter-spacing: 0.05em; margin-top: 2px; }
+  .w-check { width: 28px; height: 28px; border: 1.5px solid var(--moss); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .w-check.done { background: var(--moss); color: #fff; }
+
+  /* ===== Screen 4: Identify ===== */
+  .s-id { padding: 60px 22px 30px; flex: 1; overflow: hidden; }
+  .id-eyebrow { font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--moss); margin-bottom: 4px; }
+  .id-h { font-family: 'Lora', serif; font-size: 28px; font-weight: 400; line-height: 1.05; letter-spacing: -0.01em; }
+  .id-h em { font-style: italic; }
+  .id-sub { font-size: 11px; opacity: 0.65; margin-top: 4px; margin-bottom: 18px; }
+  .id-photo { aspect-ratio: 1; background: url('assets/plant-succulent.jpg') center/cover; border-radius: 18px; position: relative; margin-bottom: 14px; overflow: hidden; }
+  .id-overlay { position: absolute; inset: 18px; border: 2px solid #fff; border-radius: 10px; }
+  .id-corner { position: absolute; width: 16px; height: 16px; border: 3px solid var(--terra); }
+  .id-corner.tl { top: 10px; left: 10px; border-right: none; border-bottom: none; }
+  .id-corner.tr { top: 10px; right: 10px; border-left: none; border-bottom: none; }
+  .id-corner.bl { bottom: 10px; left: 10px; border-right: none; border-top: none; }
+  .id-corner.br { bottom: 10px; right: 10px; border-left: none; border-top: none; }
+  .id-scan { background: rgba(255,255,255,0.9); padding: 8px 14px; border-radius: 30px; position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--moss); backdrop-filter: blur(20px); font-weight: 700; }
+  .id-result { background: var(--cream-2); border-radius: 14px; padding: 14px; }
+  .id-confidence { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--moss); }
+  .id-result-name { font-family: 'Lora', serif; font-size: 19px; font-style: italic; margin-top: 4px; line-height: 1.1; }
+  .id-result-sci { font-family: 'Lora', serif; font-style: italic; font-size: 12px; opacity: 0.65; margin-top: 4px; }
+  .id-result-cta { background: var(--moss); color: #fff; padding: 10px; border-radius: 30px; text-align: center; font-size: 12px; letter-spacing: 0.05em; margin-top: 12px; font-weight: 600; }
+
+  /* ===== Screen 5: Shop nursery ===== */
+  .s-shop { padding: 60px 18px 30px; flex: 1; overflow: hidden; }
+  .sh-h { font-family: 'Lora', serif; font-size: 26px; font-weight: 400; letter-spacing: -0.01em; }
+  .sh-h em { font-style: italic; color: var(--moss); }
+  .sh-sub { font-size: 11px; opacity: 0.65; margin-top: 4px; margin-bottom: 18px; }
+  .sh-cats { display: flex; gap: 6px; margin-bottom: 14px; overflow-x: auto; }
+  .sh-cats span { padding: 7px 14px; border-radius: 30px; font-size: 11px; background: var(--cream-2); flex-shrink: 0; }
+  .sh-cats span.active { background: var(--moss); color: #fff; }
+  .sh-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .sh-card { background: #fff; border-radius: 14px; overflow: hidden; }
+  .sh-card img { width: 100%; aspect-ratio: 1; object-fit: cover; }
+  .sh-card .info { padding: 10px 12px; }
+  .sh-card .nm { font-family: 'Lora', serif; font-style: italic; font-size: 13px; line-height: 1.1; }
+  .sh-card .sci { font-size: 9px; opacity: 0.55; font-style: italic; margin-top: 3px; }
+  .sh-card .pr { font-family: 'Lora', serif; font-style: italic; font-size: 14px; color: var(--moss); margin-top: 6px; font-weight: 500; }
+</style>
+</head>
+<body>
+<div class="showcase">
+
+  <header class="showcase-header">
+    <div>
+      <div class="brand-mark">Verdure</div>
+      <div class="showcase-title">Keeping things<br><em>alive,</em> together.</div>
+    </div>
+    <div class="showcase-meta">
+      Template 15 / 30<br>
+      Plant Care<br>
+      v1.0
+    </div>
+  </header>
+
+  <div class="phone-rail-outer"><div class="phone-rail">
+
+    <!-- Phone 1 — Garden home -->
+    <div class="phone-wrap"><div class="phone"><div class="phone-screen">
+      <div class="status-bar"><span>9:41</span><div class="status-icons"><span class="status-bar-signal"><i></i><i></i><i></i><i></i></span><svg viewBox="0 0 16 11" fill="currentColor"><path d="M8 2.5a8 8 0 0 0-5.66 2.34l.95.95a6.66 6.66 0 0 1 9.42 0l.95-.95A8 8 0 0 0 8 2.5z"/></svg><svg viewBox="0 0 24 11" fill="none"><rect x="0.5" y="0.5" width="20" height="10" rx="2.5" stroke="currentColor" opacity="0.5"/><rect x="2" y="2" width="17" height="7" rx="1.5" fill="currentColor"/></svg></div></div>
+      <div class="s-garden">
+        <div class="g-greet">THURSDAY · APRIL 14</div>
+        <div class="g-h">Your <em>garden</em>,<br>indoors</div>
+        <div class="g-sub">12 plants · 3 need water today</div>
+        <div class="g-status">
+          <div class="g-stat"><div class="v">12</div><div class="l">PLANTS</div></div>
+          <div class="g-stat"><div class="v">3</div><div class="l">DUE</div></div>
+          <div class="g-stat"><div class="v">94<sup style="font-size:11px">%</sup></div><div class="l">HEALTHY</div></div>
+        </div>
+        <div class="g-section-h">In your rooms</div>
+        <div class="g-grid">
+          <div class="g-card">
+            <img src="assets/plant-monstera.jpg" alt="">
+            <div class="info">
+              <div class="nm">Monstera<br><em>Delphi</em></div>
+              <div class="next due">Water today</div>
+            </div>
+          </div>
+          <div class="g-card">
+            <img src="assets/plant-fiddle.jpg" alt="">
+            <div class="info">
+              <div class="nm">Fiddle Fig<br><em>Augustus</em></div>
+              <div class="next">In 2 days</div>
+            </div>
+          </div>
+          <div class="g-card">
+            <img src="assets/plant-succulent.jpg" alt="">
+            <div class="info">
+              <div class="nm">Echeveria<br><em>Pebble</em></div>
+              <div class="next">In 6 days</div>
+            </div>
+          </div>
+          <div class="g-card">
+            <img src="assets/plant-monstera.jpg" alt="">
+            <div class="info">
+              <div class="nm">Snake Plant<br><em>Cleo</em></div>
+              <div class="next due">Water today</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="home-indicator"></div>
+    </div></div><div class="phone-caption">01 · GARDEN</div></div>
+
+    <!-- Phone 2 — Plant detail -->
+    <div class="phone-wrap"><div class="phone"><div class="phone-screen">
+      <div class="s-plant">
+        <div class="p-img">
+          <div class="status-bar" style="color:#fff;"><span>9:41</span><div class="status-icons"><span class="status-bar-signal"><i></i><i></i><i></i><i></i></span><svg viewBox="0 0 16 11" fill="currentColor"><path d="M8 2.5a8 8 0 0 0-5.66 2.34l.95.95a6.66 6.66 0 0 1 9.42 0l.95-.95A8 8 0 0 0 8 2.5z"/></svg><svg viewBox="0 0 24 11" fill="none"><rect x="0.5" y="0.5" width="20" height="10" rx="2.5" stroke="currentColor" opacity="0.6"/><rect x="2" y="2" width="17" height="7" rx="1.5" fill="currentColor"/></svg></div></div>
+          <div class="back">←</div>
+          <div class="fav">♡</div>
+        </div>
+        <div class="p-body">
+          <div class="p-sci">MONSTERA DELICIOSA</div>
+          <div class="p-name"><em>Delphi</em>,<br>2y 4mo old</div>
+          <div class="p-attrs">
+            <div class="p-attr"><div class="ic">☼</div><div class="l">LIGHT</div><div class="v">Bright indirect</div></div>
+            <div class="p-attr"><div class="ic">💧</div><div class="l">WATER</div><div class="v">Every 7 days</div></div>
+            <div class="p-attr"><div class="ic">⛰</div><div class="l">SOIL</div><div class="v">Aroid mix</div></div>
+          </div>
+          <div class="p-next">
+            <div>
+              <div class="l">NEXT WATERING</div>
+              <div class="v">Today · soak fully</div>
+            </div>
+            <div class="cta">Mark done</div>
+          </div>
+        </div>
+      </div>
+      <div class="home-indicator"></div>
+    </div></div><div class="phone-caption">02 · DELPHI</div></div>
+
+    <!-- Phone 3 — Watering schedule -->
+    <div class="phone-wrap"><div class="phone"><div class="phone-screen">
+      <div class="status-bar"><span>9:41</span><div class="status-icons"><span class="status-bar-signal"><i></i><i></i><i></i><i></i></span><svg viewBox="0 0 16 11" fill="currentColor"><path d="M8 2.5a8 8 0 0 0-5.66 2.34l.95.95a6.66 6.66 0 0 1 9.42 0l.95-.95A8 8 0 0 0 8 2.5z"/></svg><svg viewBox="0 0 24 11" fill="none"><rect x="0.5" y="0.5" width="20" height="10" rx="2.5" stroke="currentColor" opacity="0.5"/><rect x="2" y="2" width="17" height="7" rx="1.5" fill="currentColor"/></svg></div></div>
+      <div class="s-water">
+        <div class="w-h">This <em>week</em></div>
+        <div class="w-sub">5 watering tasks · 2 done</div>
+        <div class="w-week">
+          <div class="w-day has"><div class="d">MON</div><div class="n">11</div><div class="dot"></div></div>
+          <div class="w-day"><div class="d">TUE</div><div class="n">12</div><div class="dot"></div></div>
+          <div class="w-day has"><div class="d">WED</div><div class="n">13</div><div class="dot"></div></div>
+          <div class="w-day today has"><div class="d">THU</div><div class="n">14</div><div class="dot" style="background:#fff;"></div></div>
+          <div class="w-day"><div class="d">FRI</div><div class="n">15</div></div>
+          <div class="w-day has"><div class="d">SAT</div><div class="n">16</div><div class="dot"></div></div>
+          <div class="w-day"><div class="d">SUN</div><div class="n">17</div></div>
+        </div>
+        <div class="w-section-h">Today's watering</div>
+        <div class="w-row">
+          <img src="assets/plant-monstera.jpg" alt="">
+          <div class="w-info"><div class="nm">Delphi · Monstera</div><div class="where">LIVING ROOM · WINDOW</div></div>
+          <div class="w-check"></div>
+        </div>
+        <div class="w-row">
+          <img src="assets/plant-succulent.jpg" alt="">
+          <div class="w-info"><div class="nm">Pebble · Echeveria</div><div class="where">KITCHEN · SHELF</div></div>
+          <div class="w-check done">✓</div>
+        </div>
+        <div class="w-row">
+          <img src="assets/plant-fiddle.jpg" alt="">
+          <div class="w-info"><div class="nm">Cleo · Snake Plant</div><div class="where">BEDROOM · CORNER</div></div>
+          <div class="w-check"></div>
+        </div>
+      </div>
+      <div class="home-indicator"></div>
+    </div></div><div class="phone-caption">03 · WATER</div></div>
+
+    <!-- Phone 4 — Identify -->
+    <div class="phone-wrap"><div class="phone"><div class="phone-screen">
+      <div class="status-bar"><span>9:41</span><div class="status-icons"><span class="status-bar-signal"><i></i><i></i><i></i><i></i></span><svg viewBox="0 0 16 11" fill="currentColor"><path d="M8 2.5a8 8 0 0 0-5.66 2.34l.95.95a6.66 6.66 0 0 1 9.42 0l.95-.95A8 8 0 0 0 8 2.5z"/></svg><svg viewBox="0 0 24 11" fill="none"><rect x="0.5" y="0.5" width="20" height="10" rx="2.5" stroke="currentColor" opacity="0.5"/><rect x="2" y="2" width="17" height="7" rx="1.5" fill="currentColor"/></svg></div></div>
+      <div class="s-id">
+        <div class="id-eyebrow">IDENTIFY · STEP 2 / 3</div>
+        <div class="id-h">What is <em>this</em>?</div>
+        <div class="id-sub">Hold steady while we look it up</div>
+        <div class="id-photo">
+          <div class="id-corner tl"></div>
+          <div class="id-corner tr"></div>
+          <div class="id-corner bl"></div>
+          <div class="id-corner br"></div>
+          <div class="id-scan">SCANNING…</div>
+        </div>
+        <div class="id-result">
+          <div class="id-confidence">98% MATCH</div>
+          <div class="id-result-name">Echeveria '<em>Lola</em>'</div>
+          <div class="id-result-sci">Echeveria lilacina × derenbergii</div>
+          <div class="id-result-cta">Add to my garden →</div>
+        </div>
+      </div>
+      <div class="home-indicator"></div>
+    </div></div><div class="phone-caption">04 · IDENTIFY</div></div>
+
+    <!-- Phone 5 — Shop nursery -->
+    <div class="phone-wrap"><div class="phone"><div class="phone-screen">
+      <div class="status-bar"><span>9:41</span><div class="status-icons"><span class="status-bar-signal"><i></i><i></i><i></i><i></i></span><svg viewBox="0 0 16 11" fill="currentColor"><path d="M8 2.5a8 8 0 0 0-5.66 2.34l.95.95a6.66 6.66 0 0 1 9.42 0l.95-.95A8 8 0 0 0 8 2.5z"/></svg><svg viewBox="0 0 24 11" fill="none"><rect x="0.5" y="0.5" width="20" height="10" rx="2.5" stroke="currentColor" opacity="0.5"/><rect x="2" y="2" width="17" height="7" rx="1.5" fill="currentColor"/></svg></div></div>
+      <div class="s-shop">
+        <div class="sh-h">The <em>nursery</em></div>
+        <div class="sh-sub">Beginner-friendly plants this week</div>
+        <div class="sh-cats">
+          <span class="active">All</span>
+          <span>Easy</span>
+          <span>Low light</span>
+          <span>Pet safe</span>
+        </div>
+        <div class="sh-grid">
+          <div class="sh-card">
+            <img src="assets/plant-monstera.jpg" alt="">
+            <div class="info">
+              <div class="nm">Monstera <em>Delphi</em></div>
+              <div class="sci">M. deliciosa</div>
+              <div class="pr">$ 48</div>
+            </div>
+          </div>
+          <div class="sh-card">
+            <img src="assets/plant-fiddle.jpg" alt="">
+            <div class="info">
+              <div class="nm">Fiddle leaf <em>fig</em></div>
+              <div class="sci">F. lyrata</div>
+              <div class="pr">$ 84</div>
+            </div>
+          </div>
+          <div class="sh-card">
+            <img src="assets/plant-succulent.jpg" alt="">
+            <div class="info">
+              <div class="nm">Echeveria '<em>Lola</em>'</div>
+              <div class="sci">E. lilacina × derenbergii</div>
+              <div class="pr">$ 14</div>
+            </div>
+          </div>
+          <div class="sh-card">
+            <img src="assets/plant-monstera.jpg" alt="">
+            <div class="info">
+              <div class="nm">Snake plant <em>Cleo</em></div>
+              <div class="sci">S. trifasciata</div>
+              <div class="pr">$ 32</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="home-indicator"></div>
+    </div></div><div class="phone-caption">05 · NURSERY</div></div>
+
+  </div></div>
+
+  <footer class="showcase-footer">
+    <div>
+      <div class="footer-block-label">Concept</div>
+      A plant-care companion that treats houseplants like small biographies — names, ages, watering rituals. Built around fine botanical photography and patient, plant-paced UI.
+    </div>
+    <div>
+      <div class="footer-block-label">Palette</div>
+      <div class="swatches">
+        <span class="swatch" style="background:#f0ead8;border:1px solid #d8c79f"></span>
+        <span class="swatch" style="background:#4a5d3a"></span>
+        <span class="swatch" style="background:#b67148"></span>
+        <span class="swatch" style="background:#6b4a31"></span>
+      </div>
+    </div>
+    <div>
+      <div class="footer-block-label">Typography</div>
+      <div style="font-family:'Lora',serif;font-size:22px;font-style:italic">Lora · Italic</div>
+      <div style="font-family:'Nunito',sans-serif;font-size:13px">Nunito · 400 / 600</div>
+    </div>
+    <div>
+      <div class="footer-block-label">Use Cases</div>
+      Plant Care<br>Gardening<br>Identification<br>Home Botanicals
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

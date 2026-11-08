@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:bountyloop_app/features/auth/login_screen.dart';
 
 void main() {
-  testWidgets('Login screen loads with BountyLoop branding and role toggles',
+  testWidgets('Login screen loads with BountyLoop branding and demo role switchers',
       (WidgetTester tester) async {
     await tester.pumpWidget(
       const ProviderScope(
@@ -14,22 +14,17 @@ void main() {
       ),
     );
 
-    // Verify Brand title & tagline
+    // Verify Brand title & Figma tagline
     expect(find.text('BountyLoop'), findsOneWidget);
-    expect(find.textContaining('Turn surplus into supper'), findsOneWidget);
+    expect(find.textContaining('More shared. Less wasted.'), findsOneWidget);
 
-    // Verify Role choice chips
+    // Verify Email and Password input labels
+    expect(find.text('Email address'), findsOneWidget);
+    expect(find.text('Password'), findsOneWidget);
+    expect(find.text('Sign in'), findsOneWidget);
+
+    // Verify 1-tap demo cards
     expect(find.text('Donor'), findsOneWidget);
-    expect(find.text('Recipient'), findsOneWidget);
-
-    // Default button is for Food Donor
-    expect(find.text('Continue as Food Donor'), findsOneWidget);
-
-    // Tap on Recipient role
-    await tester.tap(find.text('Recipient'));
-    await tester.pump();
-
-    // Button updates to Food Rescue Partner
-    expect(find.text('Continue as Food Rescue Partner'), findsOneWidget);
+    expect(find.text('Recipient Pantry'), findsOneWidget);
   });
 }

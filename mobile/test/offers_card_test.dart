@@ -12,8 +12,8 @@ void main() {
       donorId: 'donor_bakery',
       donorName: 'Artisan Bakery Hub',
       donorAddress: '100 Congress Ave, Austin, TX',
-      photoPaths: ['photos/bread.jpg'],
-      item: 'bread_bakery',
+      photoPaths: const ['assets/images/mixed_pastries.jpg'],
+      item: 'bakery_pastries',
       freshness: 'grade_2_good',
       estWeightKg: 8.5,
       expiresAt: DateTime.now().add(const Duration(hours: 36)),
@@ -29,23 +29,25 @@ void main() {
       MaterialApp(
         theme: AppTheme.lightTheme,
         home: Scaffold(
-          body: OfferCard(
-            offer: offer,
-            onTap: () => tapped = true,
+          body: ListView(
+            children: [
+              OfferCard(
+                offer: offer,
+                onTap: () => tapped = true,
+              ),
+            ],
           ),
         ),
       ),
     );
 
-    expect(find.text('Bakery & Bread'), findsOneWidget);
     expect(find.text('Artisan Bakery Hub'), findsOneWidget);
-    expect(find.text('Grade 2: Good'), findsOneWidget);
-    expect(find.text('8.5 kg'), findsOneWidget);
-    expect(find.text('3.4 km away'), findsOneWidget);
-    expect(find.text('36h left'), findsOneWidget);
+    expect(find.text('OPEN'), findsOneWidget);
+    expect(find.text('3.4 km'), findsOneWidget);
+    expect(find.text('04:20:00 left'), findsOneWidget);
+    expect(find.text('Expires 18:00'), findsOneWidget);
 
     await tester.tap(find.byType(OfferCard));
     expect(tapped, isTrue);
   });
 }
-

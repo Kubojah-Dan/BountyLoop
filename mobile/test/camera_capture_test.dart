@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:bountyloop_app/features/donate/camera_capture_screen.dart';
 
 void main() {
-  testWidgets('CameraCaptureScreen allows setting weight and choosing sample photo',
+  testWidgets('CameraCaptureScreen renders Figma 3-step AI assessment and safety verification',
       (WidgetTester tester) async {
     await tester.pumpWidget(
       const ProviderScope(
@@ -14,26 +14,22 @@ void main() {
       ),
     );
 
-    // Verify initial UI elements
-    expect(find.text('Donate Surplus Food'), findsOneWidget);
-    expect(find.text('Take or Upload Food Photo'), findsOneWidget);
-    expect(find.text('Camera'), findsOneWidget);
-    expect(find.text('Gallery'), findsOneWidget);
-    expect(find.text('Estimated Weight (kg)'), findsOneWidget);
+    // Verify Title & Stepper
+    expect(find.text('Photo to rescue'), findsOneWidget);
+    expect(find.text('NEW DONATION • DRAFT'), findsOneWidget);
+    expect(find.text('1 Photo'), findsOneWidget);
+    expect(find.text('2 Review AI'), findsOneWidget);
+    expect(find.text('3 Publish'), findsOneWidget);
 
-    // Tap "use demo sample photo"
-    await tester.tap(find.text('Or use demo sample photo'));
-    await tester.pump();
+    // Verify AI assessment card
+    expect(find.text('AI assessment'), findsOneWidget);
+    expect(find.text('ITEM CATEGORY'), findsOneWidget);
+    expect(find.text('Bakery • mixed pastries'), findsOneWidget);
+    expect(find.text('HAZARD GATE - DONOR CHECK REQUIRED'), findsOneWidget);
 
-    // Verify placeholder replaced by preview image with refresh button
-    expect(find.byIcon(Icons.refresh), findsOneWidget);
-
-    // Update weight
-    final weightField = find.widgetWithText(TextField, '3.5');
-    expect(weightField, findsOneWidget);
-    await tester.enterText(weightField, '6.0');
-    await tester.pump();
-    expect(find.text('6.0'), findsOneWidget);
+    // Verify actions
+    expect(find.text('Confirm assessment'), findsOneWidget);
+    expect(find.text('Correct AI details'), findsOneWidget);
+    expect(find.byType(Checkbox), findsOneWidget);
   });
 }
-
