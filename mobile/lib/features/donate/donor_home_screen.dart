@@ -48,9 +48,9 @@ class _DonorHomeScreenState extends ConsumerState<DonorHomeScreen> {
                         children: [
                           Text(
                             'Hello, $donorName',
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w800,
+                            style: AppTheme.lora(
+                              fontSize: 19,
+                              fontWeight: FontWeight.w700,
                               color: AppTheme.textDark,
                               letterSpacing: -0.2,
                             ),
@@ -93,21 +93,34 @@ class _DonorHomeScreenState extends ConsumerState<DonorHomeScreen> {
                   ),
                   const SizedBox(height: 20),
 
-                  // 2. Headline & Subtitle
-                  const Text(
-                    'Your surplus. Someone\'s\nsupper.',
-                    style: TextStyle(
-                      fontSize: 26,
-                      fontWeight: FontWeight.w800,
-                      color: AppTheme.textDark,
-                      height: 1.12,
-                      letterSpacing: -0.4,
+                  // 2. Headline & Subtitle with Lora italic accent
+                  RichText(
+                    text: TextSpan(
+                      style: AppTheme.lora(
+                        fontSize: 27,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.textDark,
+                        height: 1.12,
+                        letterSpacing: -0.3,
+                      ),
+                      children: [
+                        const TextSpan(text: 'Your surplus. Someone\'s\n'),
+                        TextSpan(
+                          text: 'supper.',
+                          style: AppTheme.lora(
+                            fontSize: 27,
+                            fontWeight: FontWeight.w700,
+                            fontStyle: FontStyle.italic,
+                            color: AppTheme.brandGreen,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 6),
-                  const Text(
+                  Text(
                     'A little less waste. A lot more possibility.',
-                    style: TextStyle(
+                    style: AppTheme.nunito(
                       fontSize: 13,
                       color: AppTheme.textMuted,
                     ),
@@ -146,7 +159,7 @@ class _DonorHomeScreenState extends ConsumerState<DonorHomeScreen> {
                           ],
                         ),
                         const SizedBox(height: 14),
-                        const Row(
+                        Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Column(
@@ -154,16 +167,17 @@ class _DonorHomeScreenState extends ConsumerState<DonorHomeScreen> {
                               children: [
                                 Text(
                                   '186',
-                                  style: TextStyle(
+                                  style: AppTheme.lora(
                                     color: Colors.white,
-                                    fontSize: 26,
-                                    fontWeight: FontWeight.w800,
+                                    fontSize: 27,
+                                    fontWeight: FontWeight.w700,
+                                    fontStyle: FontStyle.italic,
                                   ),
                                 ),
-                                SizedBox(height: 2),
+                                const SizedBox(height: 2),
                                 Text(
                                   'kg rescued',
-                                  style: TextStyle(color: Colors.white70, fontSize: 11),
+                                  style: AppTheme.nunito(color: Colors.white70, fontSize: 11),
                                 ),
                               ],
                             ),
@@ -172,16 +186,17 @@ class _DonorHomeScreenState extends ConsumerState<DonorHomeScreen> {
                               children: [
                                 Text(
                                   '442',
-                                  style: TextStyle(
+                                  style: AppTheme.lora(
                                     color: Colors.white,
-                                    fontSize: 26,
-                                    fontWeight: FontWeight.w800,
+                                    fontSize: 27,
+                                    fontWeight: FontWeight.w700,
+                                    fontStyle: FontStyle.italic,
                                   ),
                                 ),
-                                SizedBox(height: 2),
+                                const SizedBox(height: 2),
                                 Text(
                                   'meals shared',
-                                  style: TextStyle(color: Colors.white70, fontSize: 11),
+                                  style: AppTheme.nunito(color: Colors.white70, fontSize: 11),
                                 ),
                               ],
                             ),
@@ -190,16 +205,17 @@ class _DonorHomeScreenState extends ConsumerState<DonorHomeScreen> {
                               children: [
                                 Text(
                                   '465',
-                                  style: TextStyle(
+                                  style: AppTheme.lora(
                                     color: Colors.white,
-                                    fontSize: 26,
-                                    fontWeight: FontWeight.w800,
+                                    fontSize: 27,
+                                    fontWeight: FontWeight.w700,
+                                    fontStyle: FontStyle.italic,
                                   ),
                                 ),
-                                SizedBox(height: 2),
+                                const SizedBox(height: 2),
                                 Text(
                                   'kg CO₂ saved',
-                                  style: TextStyle(color: Colors.white70, fontSize: 11),
+                                  style: AppTheme.nunito(color: Colors.white70, fontSize: 11),
                                 ),
                               ],
                             ),
@@ -243,9 +259,9 @@ class _DonorHomeScreenState extends ConsumerState<DonorHomeScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         'In your loop',
-                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppTheme.textDark),
+                        style: AppTheme.lora(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.textDark),
                       ),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -365,9 +381,9 @@ class _DonorHomeScreenState extends ConsumerState<DonorHomeScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         'Recently rescued',
-                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppTheme.textDark),
+                        style: AppTheme.lora(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.textDark),
                       ),
                       TextButton(
                         onPressed: () {},

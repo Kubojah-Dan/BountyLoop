@@ -107,18 +107,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       appBar: AppBar(
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
+          children: [
             Text(
               'Profile & privacy',
-              style: TextStyle(
+              style: AppTheme.lora(
                 fontSize: 22,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w700,
                 color: AppTheme.textDark,
                 letterSpacing: -0.3,
               ),
             ),
-            SizedBox(height: 2),
-            Text(
+            const SizedBox(height: 2),
+            const Text(
               'YOUR ACCOUNT, YOUR CHOICES',
               style: TextStyle(
                 fontSize: 10,
@@ -173,8 +173,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       children: [
                         Text(
                           displayName,
-                          style: const TextStyle(
-                            fontSize: 18,
+                          style: AppTheme.lora(
+                            fontSize: 19,
                             fontWeight: FontWeight.w700,
                             color: AppTheme.textDark,
                           ),

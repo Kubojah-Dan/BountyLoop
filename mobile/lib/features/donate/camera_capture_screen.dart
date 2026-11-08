@@ -257,10 +257,10 @@ class _CameraCaptureScreenState extends ConsumerState<CameraCaptureScreen> {
         ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
+          children: [
             Text(
               'Photo to rescue',
-              style: TextStyle(
+              style: AppTheme.lora(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
                 color: AppTheme.textDark,
@@ -384,13 +384,13 @@ class _CameraCaptureScreenState extends ConsumerState<CameraCaptureScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Row(
+                      Row(
                         children: [
-                          Icon(Icons.auto_awesome, color: AppTheme.brandGreen, size: 18),
-                          SizedBox(width: 6),
+                          const Icon(Icons.auto_awesome, color: AppTheme.brandGreen, size: 18),
+                          const SizedBox(width: 6),
                           Text(
                             'AI assessment',
-                            style: TextStyle(
+                            style: AppTheme.lora(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
                               color: AppTheme.textDark,
@@ -430,7 +430,7 @@ class _CameraCaptureScreenState extends ConsumerState<CameraCaptureScreen> {
                   const SizedBox(height: 4),
                   Text(
                     _itemCategory,
-                    style: const TextStyle(
+                    style: AppTheme.lora(
                       fontSize: 17,
                       fontWeight: FontWeight.w700,
                       color: AppTheme.textDark,

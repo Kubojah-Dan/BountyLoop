@@ -80,18 +80,18 @@ class _OffersListScreenState extends ConsumerState<OffersListScreen> {
       appBar: AppBar(
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
+          children: [
             Text(
               'Good food, nearby',
-              style: TextStyle(
+              style: AppTheme.lora(
                 fontSize: 22,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w700,
                 color: AppTheme.textDark,
                 letterSpacing: -0.3,
               ),
             ),
-            SizedBox(height: 2),
-            Text(
+            const SizedBox(height: 2),
+            const Text(
               'ST MARK\'S PANTRY • RECIPIENT',
               style: TextStyle(
                 fontSize: 10,

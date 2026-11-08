@@ -157,7 +157,7 @@ class OfferCard extends StatelessWidget {
                   const SizedBox(height: 6),
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: AppTheme.lora(
                       fontSize: 17,
                       fontWeight: FontWeight.w700,
                       color: AppTheme.textDark,

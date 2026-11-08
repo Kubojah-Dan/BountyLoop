@@ -53,9 +53,9 @@ class _DonationTimelineScreenState extends ConsumerState<DonationTimelineScreen>
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Donation timeline',
-              style: TextStyle(
+              style: AppTheme.lora(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
                 color: AppTheme.textDark,
@@ -190,11 +190,11 @@ class _DonationTimelineScreenState extends ConsumerState<DonationTimelineScreen>
                     ],
                   ),
                   const SizedBox(height: 8),
-                  const Text(
+                  Text(
                     'Arriving at 14:10',
-                    style: TextStyle(
+                    style: AppTheme.lora(
                       fontSize: 26,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w700,
                       color: Colors.white,
                       letterSpacing: -0.5,
                     ),

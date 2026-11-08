@@ -1,25 +1,68 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-/// BountyLoop Brand Theme Tokens matching Figma AI Design System.
+/// BountyLoop Brand Theme Tokens matching Figma AI Design System and Project Template Showcase.
 class AppTheme {
-  // Brand color tokens
-  static const Color brandGreen = Color(0xFF2D5A3D); // Primary brand green
-  static const Color brandGreenDark = Color(0xFF1E3F2B); // Deep card green
-  static const Color brandGreenLight = Color(0xFFE8F3EB); // Soft sage/green highlight
-  static const Color brandAmber = Color(0xFFD98E32); // Secondary golden amber CTA
-  static const Color brandAmberLight = Color(0xFFFEF7ED); // Light amber callout
+  // Brand color tokens derived from project template (--moss, --moss-deep, --terra, --cream, --ink)
+  static const Color brandGreen = Color(0xFF385E38); // Organic moss green (--moss)
+  static const Color brandGreenDark = Color(0xFF223824); // Deep forest moss green (--moss-deep)
+  static const Color brandGreenLight = Color(0xFFE7EFE8); // Soft moss tint
+  static const Color brandAmber = Color(0xFFC77735); // Warm terracotta amber (--terra)
+  static const Color brandAmberLight = Color(0xFFFBF3EB); // Warm cream amber callout
 
   static const Color neutralWhite = Color(0xFFFFFFFF);
-  static const Color surfaceLight = Color(0xFFF7F9F6); // Soft warm off-white
-  static const Color textDark = Color(0xFF1C2B1E); // High-contrast charcoal green
-  static const Color textMuted = Color(0xFF6C7D6E); // Subtle label grey/sage
-  static const Color cardBorder = Color(0xFFE5EDE6); // Refined card border
-  static const Color dangerRed = Color(0xFFDC2626);
-  static const Color dangerRedLight = Color(0xFFFEF2F2);
+  static const Color surfaceLight = Color(0xFFF7F5EE); // Warm cream backdrop (--cream)
+  static const Color surfaceCardCream = Color(0xFFECE6D8); // Card surface cream (--cream-2)
+  static const Color textDark = Color(0xFF1F261C); // Deep charcoal ink (--ink)
+  static const Color textMuted = Color(0xFF6B7B68); // Soft earthy sage
+  static const Color cardBorder = Color(0xFFE4DFD3); // Warm border
+  static const Color dangerRed = Color(0xFFC53030);
+  static const Color dangerRedLight = Color(0xFFFDF2F2);
   static const Color warningAmber = Color(0xFFD97706);
-  static const Color successGreen = Color(0xFF16A34A);
+  static const Color successGreen = Color(0xFF2E7D32);
+
+  // Typography helpers from project template:
+  // Lora for brand, titles, display headlines, numbers
+  // Nunito for body, forms, buttons, controls, captions
+  static TextStyle lora({
+    double? fontSize,
+    FontWeight? fontWeight,
+    Color? color,
+    FontStyle? fontStyle,
+    double? letterSpacing,
+    double? height,
+  }) {
+    return GoogleFonts.lora(
+      fontSize: fontSize,
+      fontWeight: fontWeight,
+      color: color ?? textDark,
+      fontStyle: fontStyle,
+      letterSpacing: letterSpacing,
+      height: height,
+    );
+  }
+
+  static TextStyle nunito({
+    double? fontSize,
+    FontWeight? fontWeight,
+    Color? color,
+    FontStyle? fontStyle,
+    double? letterSpacing,
+    double? height,
+  }) {
+    return GoogleFonts.nunito(
+      fontSize: fontSize,
+      fontWeight: fontWeight,
+      color: color ?? textDark,
+      fontStyle: fontStyle,
+      letterSpacing: letterSpacing,
+      height: height,
+    );
+  }
 
   static ThemeData get lightTheme {
+    final nunitoTheme = GoogleFonts.nunitoTextTheme();
+
     return ThemeData(
       useMaterial3: true,
       colorScheme: ColorScheme.fromSeed(
@@ -31,16 +74,30 @@ class AppTheme {
         error: dangerRed,
       ),
       scaffoldBackgroundColor: surfaceLight,
-      fontFamily: 'Inter',
-      appBarTheme: const AppBarTheme(
+      textTheme: nunitoTheme.copyWith(
+        displayLarge: GoogleFonts.lora(color: textDark, fontWeight: FontWeight.w600),
+        displayMedium: GoogleFonts.lora(color: textDark, fontWeight: FontWeight.w600),
+        displaySmall: GoogleFonts.lora(color: textDark, fontWeight: FontWeight.w600),
+        headlineLarge: GoogleFonts.lora(color: textDark, fontWeight: FontWeight.w700),
+        headlineMedium: GoogleFonts.lora(color: textDark, fontWeight: FontWeight.w700),
+        headlineSmall: GoogleFonts.lora(color: textDark, fontWeight: FontWeight.w700),
+        titleLarge: GoogleFonts.lora(color: textDark, fontWeight: FontWeight.w700),
+        titleMedium: GoogleFonts.nunito(color: textDark, fontWeight: FontWeight.w700),
+        titleSmall: GoogleFonts.nunito(color: textDark, fontWeight: FontWeight.w600),
+        bodyLarge: GoogleFonts.nunito(color: textDark),
+        bodyMedium: GoogleFonts.nunito(color: textDark),
+        bodySmall: GoogleFonts.nunito(color: textMuted),
+        labelLarge: GoogleFonts.nunito(fontWeight: FontWeight.w700),
+      ),
+      appBarTheme: AppBarTheme(
         backgroundColor: surfaceLight,
         foregroundColor: textDark,
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
-        titleTextStyle: TextStyle(
+        titleTextStyle: GoogleFonts.lora(
           color: textDark,
-          fontSize: 18,
+          fontSize: 20,
           fontWeight: FontWeight.w700,
           letterSpacing: -0.2,
         ),
@@ -62,7 +119,7 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
           ),
-          textStyle: const TextStyle(
+          textStyle: GoogleFonts.nunito(
             fontSize: 15,
             fontWeight: FontWeight.w700,
             letterSpacing: 0.1,
@@ -78,7 +135,7 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
           ),
-          textStyle: const TextStyle(
+          textStyle: GoogleFonts.nunito(
             fontSize: 14,
             fontWeight: FontWeight.w600,
           ),
@@ -100,15 +157,15 @@ class AppTheme {
           borderRadius: BorderRadius.circular(14),
           borderSide: const BorderSide(color: brandGreen, width: 1.8),
         ),
-        labelStyle: const TextStyle(color: textMuted, fontSize: 13),
-        hintStyle: const TextStyle(color: textMuted, fontSize: 13),
+        labelStyle: GoogleFonts.nunito(color: textMuted, fontSize: 13),
+        hintStyle: GoogleFonts.nunito(color: textMuted, fontSize: 13),
       ),
-      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: neutralWhite,
         selectedItemColor: brandGreen,
         unselectedItemColor: textMuted,
-        selectedLabelStyle: TextStyle(fontWeight: FontWeight.w700, fontSize: 11),
-        unselectedLabelStyle: TextStyle(fontWeight: FontWeight.w500, fontSize: 11),
+        selectedLabelStyle: GoogleFonts.nunito(fontWeight: FontWeight.w700, fontSize: 11),
+        unselectedLabelStyle: GoogleFonts.nunito(fontWeight: FontWeight.w500, fontSize: 11),
         elevation: 8,
         type: BottomNavigationBarType.fixed,
       ),

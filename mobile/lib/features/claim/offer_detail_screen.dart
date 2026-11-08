@@ -96,9 +96,9 @@ class _OfferDetailScreenState extends ConsumerState<OfferDetailScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Offer details',
-              style: TextStyle(
+              style: AppTheme.lora(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
                 color: AppTheme.textDark,
@@ -197,9 +197,9 @@ class _OfferDetailScreenState extends ConsumerState<OfferDetailScreen> {
             // Item Title, Subtitle, Description
             Text(
               title,
-              style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w800,
+              style: AppTheme.lora(
+                fontSize: 23,
+                fontWeight: FontWeight.w700,
                 color: AppTheme.textDark,
                 letterSpacing: -0.3,
               ),
@@ -254,10 +254,10 @@ class _OfferDetailScreenState extends ConsumerState<OfferDetailScreen> {
             const SizedBox(height: 18),
 
             // Route Section
-            const Text(
+            Text(
               'Your route to rescue',
-              style: TextStyle(
-                fontSize: 15,
+              style: AppTheme.lora(
+                fontSize: 16,
                 fontWeight: FontWeight.w700,
                 color: AppTheme.textDark,
               ),

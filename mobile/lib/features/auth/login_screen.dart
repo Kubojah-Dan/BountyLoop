@@ -28,7 +28,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _handleLogin({String? overrideEmail, String? role, String? displayName}) async {
     final email = (overrideEmail ?? _emailController.text).trim();
     if (email.isEmpty) {
-      setState(() => _errorMessage = 'Please enter an email');
+      setState(() => _errorMessage = 'Please enter an email address.');
       return;
     }
 
@@ -37,16 +37,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _errorMessage = null;
     });
 
+    final determinedRole = role ??
+        (email.contains('pantry') || email.contains('foodbank') || email.contains('recipient')
+            ? 'recipient'
+            : 'donor');
+
     try {
-      final userRole = role ?? (email.contains('pantry') ? 'recipient' : 'donor');
       await ref.read(authProvider.notifier).signIn(
             email: email,
-            role: userRole,
-            displayName: displayName ?? (userRole == 'donor' ? 'Hearth Bakery' : 'St Mark\'s Pantry'),
+            role: determinedRole,
+            displayName: displayName ?? (determinedRole == 'donor' ? 'Hearth Bakery' : 'Maya Patel'),
           );
 
       if (!mounted) return;
-      if (userRole == 'donor') {
+      if (determinedRole == 'donor') {
         context.go('/donate');
       } else {
         context.go('/offers');
@@ -73,30 +77,33 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // 1. Top Branding Header
+                  // 1. Top Branding Header with Authentic BountyLoop Loop Emblem
                   Row(
                     children: [
-                      Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: AppTheme.brandGreen,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Center(
-                          child: Icon(
-                            Icons.eco_rounded,
-                            color: Colors.white,
-                            size: 18,
+                      Image.asset(
+                        'assets/brand/bountyloop_logo.png',
+                        width: 36,
+                        height: 36,
+                        errorBuilder: (_, __, ___) => Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: AppTheme.brandGreen.withOpacity(0.12),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.recycling_rounded,
+                            color: AppTheme.brandGreen,
+                            size: 22,
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      const Text(
+                      const SizedBox(width: 10),
+                      Text(
                         'BountyLoop',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w800,
+                        style: AppTheme.lora(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
                           color: AppTheme.textDark,
                           letterSpacing: -0.3,
                         ),
@@ -142,14 +149,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               ),
                             ],
                           ),
-                          child: const Row(
+                          child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.eco_outlined, size: 14, color: AppTheme.brandGreen),
-                              SizedBox(width: 6),
+                              const Icon(
+                                Icons.eco_outlined,
+                                size: 14,
+                                color: AppTheme.brandGreen,
+                              ),
+                              const SizedBox(width: 6),
                               Text(
                                 'Good food. A better next chapter.',
-                                style: TextStyle(
+                                style: AppTheme.nunito(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w700,
                                   color: AppTheme.textDark,
@@ -163,21 +174,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                   const SizedBox(height: 20),
 
-                  // 3. Headline & Description
-                  const Text(
+                  // 3. Headline & Description in Lora + Nunito
+                  Text(
                     'More shared. Less wasted.',
-                    style: TextStyle(
-                      fontSize: 26,
-                      fontWeight: FontWeight.w800,
+                    style: AppTheme.lora(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w700,
                       color: AppTheme.textDark,
-                      letterSpacing: -0.5,
+                      letterSpacing: -0.4,
                       height: 1.15,
                     ),
                   ),
                   const SizedBox(height: 6),
-                  const Text(
+                  Text(
                     'Connect surplus food with the people who can use it. Welcome to your local loop.',
-                    style: TextStyle(
+                    style: AppTheme.nunito(
                       fontSize: 13,
                       color: AppTheme.textMuted,
                       height: 1.4,
@@ -195,36 +206,49 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                       child: Text(
                         _errorMessage!,
-                        style: const TextStyle(color: AppTheme.dangerRed, fontSize: 12),
+                        style: AppTheme.nunito(color: AppTheme.dangerRed, fontSize: 12),
                       ),
                     ),
                     const SizedBox(height: 16),
                   ],
 
                   // 4. Form Fields
-                  const Text(
+                  Text(
                     'Email address',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.textDark),
+                    style: AppTheme.nunito(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.textDark,
+                    ),
                   ),
                   const SizedBox(height: 6),
                   TextField(
                     controller: _emailController,
-                    decoration: const InputDecoration(
+                    keyboardType: TextInputType.emailAddress,
+                    style: AppTheme.nunito(fontSize: 14, color: AppTheme.textDark),
+                    decoration: InputDecoration(
                       hintText: 'you@organisation.org',
+                      hintStyle: AppTheme.nunito(color: AppTheme.textMuted),
                     ),
                   ),
                   const SizedBox(height: 14),
 
-                  const Text(
+                  Text(
                     'Password',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.textDark),
+                    style: AppTheme.nunito(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.textDark,
+                    ),
                   ),
                   const SizedBox(height: 6),
                   TextField(
                     controller: _passwordController,
                     obscureText: _obscurePassword,
+                    style: AppTheme.nunito(fontSize: 14, color: AppTheme.textDark),
                     decoration: InputDecoration(
                       hintText: 'Enter your password',
+                      hintStyle: AppTheme.nunito(color: AppTheme.textMuted),
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
@@ -239,61 +263,68 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                   Align(
                     alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: () {},
-                      style: TextButton.styleFrom(
-                        padding: EdgeInsets.zero,
-                        minimumSize: Size.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                      child: const Text(
-                        'Forgot password?',
-                        style: TextStyle(color: AppTheme.brandGreen, fontSize: 12, fontWeight: FontWeight.w600),
+                    child: Text(
+                      'Forgot password?',
+                      style: AppTheme.nunito(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textDark,
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 18),
 
-                  // 5. Sign In Button
+                  // 5. Sign In CTA Button
                   ElevatedButton(
                     onPressed: _isLoading ? null : () => _handleLogin(),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.brandGreen,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                     ),
                     child: _isLoading
                         ? const SizedBox(
                             height: 20,
                             width: 20,
-                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
                           )
-                        : const Row(
+                        : Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Text('Sign in'),
-                              SizedBox(width: 8),
-                              Icon(Icons.arrow_forward_rounded, size: 16),
+                              Text(
+                                'Sign in',
+                                style: AppTheme.nunito(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              const Icon(Icons.arrow_forward_rounded, size: 18),
                             ],
                           ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 22),
 
-                  // 6. Demo Explorer Divider
-                  const Row(
+                  // 6. "OR EXPLORE A DEMO" Divider
+                  Row(
                     children: [
-                      Expanded(child: Divider(color: AppTheme.cardBorder)),
+                      const Expanded(child: Divider(color: AppTheme.cardBorder)),
                       Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 12),
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
                         child: Text(
                           'OR EXPLORE A DEMO',
-                          style: TextStyle(
+                          style: AppTheme.nunito(
                             fontSize: 10,
-                            letterSpacing: 1.2,
                             fontWeight: FontWeight.w700,
+                            letterSpacing: 0.8,
                             color: AppTheme.textMuted,
                           ),
                         ),
                       ),
-                      Expanded(child: Divider(color: AppTheme.cardBorder)),
+                      const Expanded(child: Divider(color: AppTheme.cardBorder)),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -316,25 +347,33 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(color: AppTheme.cardBorder),
                             ),
-                            child: const Column(
+                            child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Row(
+                                const Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
                                     Icon(Icons.storefront_outlined, size: 20, color: AppTheme.brandGreen),
                                     Icon(Icons.north_east_rounded, size: 14, color: AppTheme.brandGreen),
                                   ],
                                 ),
-                                SizedBox(height: 10),
+                                const SizedBox(height: 10),
                                 Text(
                                   'Donor',
-                                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.brandGreen),
+                                  style: AppTheme.nunito(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppTheme.brandGreen,
+                                  ),
                                 ),
-                                SizedBox(height: 2),
+                                const SizedBox(height: 2),
                                 Text(
                                   'Hearth Bakery',
-                                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppTheme.textDark),
+                                  style: AppTheme.lora(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppTheme.textDark,
+                                  ),
                                 ),
                               ],
                             ),
@@ -357,25 +396,33 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(color: AppTheme.cardBorder),
                             ),
-                            child: const Column(
+                            child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Row(
+                                const Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
                                     Icon(Icons.volunteer_activism_outlined, size: 20, color: AppTheme.brandAmber),
                                     Icon(Icons.north_east_rounded, size: 14, color: AppTheme.brandAmber),
                                   ],
                                 ),
-                                SizedBox(height: 10),
+                                const SizedBox(height: 10),
                                 Text(
                                   'Recipient Pantry',
-                                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.brandAmber),
+                                  style: AppTheme.nunito(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppTheme.brandAmber,
+                                  ),
                                 ),
-                                SizedBox(height: 2),
+                                const SizedBox(height: 2),
                                 Text(
                                   'St Mark\'s Pantry',
-                                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppTheme.textDark),
+                                  style: AppTheme.lora(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppTheme.textDark,
+                                  ),
                                 ),
                               ],
                             ),
@@ -386,11 +433,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                   const SizedBox(height: 20),
 
-                  // 8. Footer
-                  const Text(
+                  // 8. Footer Note
+                  Text(
                     'By continuing, you agree to our Terms & Privacy Policy. Demo roles use sample data.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 11, color: AppTheme.textMuted, height: 1.3),
+                    style: AppTheme.nunito(
+                      fontSize: 10.5,
+                      color: AppTheme.textMuted,
+                      height: 1.4,
+                    ),
                   ),
                 ],
               ),

@@ -31,7 +31,7 @@ class BountyLoopApp extends ConsumerWidget {
           builder: (context, constraints) {
             if (constraints.maxWidth > 500) {
               return Scaffold(
-                backgroundColor: const Color(0xFFF0EFEA),
+                backgroundColor: const Color(0xFFF0EAD8),
                 body: Center(
                   child: Container(
                     constraints: const BoxConstraints(maxWidth: 440),

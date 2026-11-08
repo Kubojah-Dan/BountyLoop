@@ -45,18 +45,18 @@ class _ActiveClaimsScreenState extends ConsumerState<ActiveClaimsScreen> {
       appBar: AppBar(
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
+          children: [
             Text(
               'Your pickups',
-              style: TextStyle(
+              style: AppTheme.lora(
                 fontSize: 22,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w700,
                 color: AppTheme.textDark,
                 letterSpacing: -0.3,
               ),
             ),
-            SizedBox(height: 2),
-            Text(
+            const SizedBox(height: 2),
+            const Text(
               'ST MARK\'S PANTRY • RECIPIENT',
               style: TextStyle(
                 fontSize: 10,
@@ -272,11 +272,11 @@ class _ActiveClaimsScreenState extends ConsumerState<ActiveClaimsScreen> {
                             crossAxisAlignment: CrossAxisAlignment.baseline,
                             textBaseline: TextBaseline.alphabetic,
                             children: [
-                              const Text(
+                              Text(
                                 '14:10',
-                                style: TextStyle(
+                                style: AppTheme.lora(
                                   fontSize: 32,
-                                  fontWeight: FontWeight.w800,
+                                  fontWeight: FontWeight.w700,
                                   color: Colors.white,
                                   letterSpacing: -0.5,
                                 ),
