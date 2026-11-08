@@ -23,6 +23,12 @@
 | Vercel upgrade | Before any commercial launch | Hobby plan is non-commercial |
 | LLM provider & tier | Phase 9 | Cheapest capable tier; budget-capped via AGENT_MAX_CALLS_PER_DAY |
 
-## Approved Deviations
+## Approved Deviations & Phase 13 Confirmations
 
-*(Record here after owner approval)*
+| Decision | Date | Rationale | Cost Impact |
+|---|---|---|---|
+| OSRM Estimate Fallback for Pilot | 2026-11-08 | Use straight-line PostGIS ST_Distance + speed matrix fallback (`OSRM_FALLBACK_TO_ESTIMATE=true`) instead of self-hosting dedicated OSRM container on Render. | $0.00 / month (saved $5–7/month) |
+| CV Memory Optimization on Render Free | 2026-11-08 | Disabled TTA in production (`TTA=false`) and tuned ONNX thread count (`intra_op_num_threads=2`) to guarantee RSS < 320 MB within Render's 512 MB ceiling. | $0.00 / month (no need for paid instance) |
+| Vercel SPA Dashboard on Hobby Plan | 2026-11-08 | Vite React dashboard hosted on Vercel Hobby tier for community pilot; commercial license upgrade triggered before public monetization. | $0.00 / month |
+| Neon Serverless Connection Pooling | 2026-11-08 | Utilized `-pooler` connection string with `pool_size=5` and `pool_pre_ping=True` to smoothly accommodate scale-to-zero compute spin-down without connection exhaustion. | $0.00 / month |
+

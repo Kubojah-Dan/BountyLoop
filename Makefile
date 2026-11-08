@@ -107,4 +107,9 @@ health:
 .PHONY: smoke
 smoke:
 	@echo "→ Running smoke test (Phase 13)..."
-	@$(PYTHON) infra/loadtest/smoke.py
+	@python scripts/smoke.py
+
+.PHONY: dashboard-build
+dashboard-build:
+	@echo "→ Building React Vite Dashboard..."
+	@cd dashboard && npm run build

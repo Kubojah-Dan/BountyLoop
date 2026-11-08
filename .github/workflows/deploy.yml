@@ -1,20 +1,90 @@
-name: Deploy
+name: CD — Production Deployment Pipeline
 
 on:
   push:
     branches: ["main"]
 
-# Placeholder deploy workflow — activated in Phase 13
-# This file is committed now so CI/CD configuration is version-controlled from Day 1.
-# Each service block will be filled in Phase 13 after free-tier accounts are confirmed.
-
 jobs:
-  deploy-placeholder:
-    name: Deployment pipeline (Phase 13)
+  deploy-render:
+    name: Deploy Core Services to Render
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render API Deploy Hook
+        if: env.RENDER_API_DEPLOY_HOOK != ''
+        env:
+          RENDER_API_DEPLOY_HOOK: ${{ secrets.RENDER_API_DEPLOY_HOOK }}
+        run: |
+          echo "Triggering Render API deployment..."
+          curl -f -X POST "${RENDER_API_DEPLOY_HOOK}" || echo "Deploy hook not configured or failed"
+
+      - name: Trigger Render CV Deploy Hook
+        if: env.RENDER_CV_DEPLOY_HOOK != ''
+        env:
+          RENDER_CV_DEPLOY_HOOK: ${{ secrets.RENDER_CV_DEPLOY_HOOK }}
+        run: |
+          echo "Triggering Render CV service deployment..."
+          curl -f -X POST "${RENDER_CV_DEPLOY_HOOK}" || echo "Deploy hook not configured or failed"
+
+  deploy-vercel:
+    name: Deploy Dashboard to Vercel
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dashboard
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "npm"
+          cache-dependency-path: dashboard/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Pull Vercel Environment Information
+        if: env.VERCEL_TOKEN != ''
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: vercel pull --yes --environment=production --token=$VERCEL_TOKEN
+
+      - name: Build Project Artifacts
+        if: env.VERCEL_TOKEN != ''
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: vercel build --prod --token=$VERCEL_TOKEN
+
+      - name: Deploy to Vercel Production
+        if: env.VERCEL_TOKEN != ''
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN
+
+  smoke-check:
+    name: Production Smoke Verification
+    needs: [deploy-render, deploy-vercel]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Placeholder
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install smoke test dependencies
+        run: pip install httpx
+
+      - name: Run Synthetic Smoke Verification
+        if: env.PROD_API_URL != ''
+        env:
+          PROD_API_URL: ${{ secrets.PROD_API_URL }}
         run: |
-          echo "Deployment pipeline will be activated in Phase 13."
-          echo "Target services: Render (API + CV + MCP), Vercel (dashboard), Neon (DB)."
+          python scripts/smoke.py --url "${PROD_API_URL}"

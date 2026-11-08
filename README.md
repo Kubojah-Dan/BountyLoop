@@ -98,21 +98,35 @@ bountyloop/
 
 | Phase | Objective | Status |
 |---|---|---|
-| 0 | Foundation, monorepo, Docker, /healthz | ✅ In Progress |
-| 1 | DB schema + PostGIS migrations | 🔜 |
-| 2 | Firebase auth + role guards | 🔜 |
-| 3 | CV baseline (EfficientNet-B0 freshness, ONNX) | 🔜 |
-| 4 | Item classifier + 4-level freshness + hazard cascade | 🔜 |
-| 5 | Donation API (photo-to-donate) | 🔜 |
-| 6 | Flutter app (donor + recipient + push) | 🔜 |
-| 7 | Matching engine + routing + map | 🔜 |
-| 8 | React operator dashboard | 🔜 |
-| 9 | MCP servers + LLM orchestrator | 🔜 |
-| 10 | Impact measurement + methodology | 🔜 |
-| 11 | Surplus forecasting (SARIMAX/LightGBM) | 🔜 |
-| 12 | Hardening, offline, privacy, observability | 🔜 |
-| 13 | Deployment + CI/CD | 🔜 |
-| 14 | Pilot + evaluation + retraining | 🔜 |
+| 0 | Foundation, monorepo, Docker, /healthz | `COMPLETE ✅` |
+| 1 | DB schema + PostGIS migrations | `COMPLETE ✅` |
+| 2 | Firebase auth + role guards | `COMPLETE ✅` |
+| 3 | CV baseline (EfficientNet-B0 freshness, ONNX) | `COMPLETE ✅` |
+| 4 | Item classifier + 4-level freshness + hazard cascade | `COMPLETE ✅` |
+| 5 | Donation API (photo-to-donate flow & review queue) | `COMPLETE ✅` |
+| 6 | Flutter app (donor + recipient + push) | `COMPLETE ✅` |
+| 7 | Matching engine + routing + map | `COMPLETE ✅` |
+| 8 | React operator dashboard (Vite + TypeScript) | `COMPLETE ✅` |
+| 9 | MCP servers + LLM orchestrator agent | `COMPLETE ✅` |
+| 10 | Impact measurement + methodology reporting | `COMPLETE ✅` |
+| 11 | Surplus forecasting (SARIMAX/LightGBM) | `COMPLETE ✅` |
+| 12 | Hardening: offline outbox, privacy purge, upload security | `COMPLETE ✅` |
+| 13 | Deployment (Render + Neon + Vercel) & CI/CD Pipelines | `COMPLETE ✅` |
+| 14 | Pilot evaluation & retraining loop | 🔜 Next |
+
+---
+
+## Production Deployment & CI/CD
+
+BountyLoop is built for zero-cost operation across free tiers:
+
+- **Core API (`bountyloop-api`):** Render Free Docker Web Service (FastAPI)
+- **Vision Cascade (`bountyloop-cv`):** Render Free Docker Web Service (ONNX Runtime CPU, RSS <320 MB)
+- **Database (`bountyloop-db`):** Neon Serverless PostgreSQL 16 + PostGIS 3.4 (Connection Pooling)
+- **Operator Dashboard:** Vercel Hobby SPA (`dashboard/` via Vite + TypeScript)
+- **End-to-End Smoke Test:** Run `make smoke` or `python scripts/smoke.py --url <API_URL>`
+
+For complete click-path and pipeline instructions, see [docs/deploy.md](docs/deploy.md).
 
 ---
 

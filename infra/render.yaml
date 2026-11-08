@@ -1,0 +1,90 @@
+# BountyLoop — Render Multi-Service Infrastructure as Code Blueprint (Phase 13)
+# Reference: https://render.com/docs/blueprint-spec
+
+services:
+  # ── 1. FastAPI Core Backend ──────────────────────────────────────────────────
+  - type: web
+    name: bountyloop-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    region: oregon
+    healthCheckPath: /healthz
+    numInstances: 1
+    autoDeploy: true
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_VERSION
+        value: "0.1.0"
+      - key: DATABASE_URL
+        sync: false # Set in Render Dashboard: postgresql+asyncpg://<user>:<password>@<neon-pooler-host>/bountyloop
+      - key: DATABASE_URL_SYNC
+        sync: false # Set in Render Dashboard: postgresql+psycopg://<user>:<password>@<neon-pooler-host>/bountyloop
+      - key: CV_SERVICE_URL
+        value: https://bountyloop-cv.onrender.com
+      - key: ALLOWED_ORIGINS
+        value: https://bountyloop.vercel.app,http://localhost:3000
+      - key: STORAGE_DIR
+        value: /app/storage
+      - key: MAX_UPLOAD_MB
+        value: "10"
+      - key: AGENT_ENABLED
+        value: "true"
+      - key: AGENT_MAX_CALLS_PER_DAY
+        value: "100"
+      - key: FORECAST_PROMPTS_ENABLED
+        value: "false"
+      - fromGroup: bountyloop-shared
+
+  # ── 2. Computer Vision Microservice ──────────────────────────────────────────
+  - type: web
+    name: bountyloop-cv
+    runtime: docker
+    dockerfilePath: ./cv_service/Dockerfile
+    dockerContext: ./cv_service
+    plan: free # 512 MB RAM limit: ONNX models baked into image, single-threaded CPU
+    region: oregon
+    healthCheckPath: /healthz
+    numInstances: 1
+    autoDeploy: true
+    envVars:
+      - key: MODELS_DIR
+        value: /app/models
+      - key: AUTO_CONF
+        value: "0.90"
+      - key: CONFIRM_CONF
+        value: "0.60"
+      - key: HAZARD_FORCES_REVIEW
+        value: "true"
+      - key: TTA
+        value: "false" # Disabled in 512MB RAM free tier to preserve memory budget
+      - fromGroup: bountyloop-shared
+
+  # ── 3. Notification MCP Server ───────────────────────────────────────────────
+  - type: web
+    name: bountyloop-notify-mcp
+    runtime: python
+    buildCommand: pip install -r backend/requirements.txt mcp httpx twilio
+    startCommand: python mcp_servers/notify_mcp/server.py --port 8012
+    plan: free
+    region: oregon
+    numInstances: 1
+    autoDeploy: true
+    envVars:
+      - key: MCP_PORT
+        value: "8012"
+      - key: SMS_DAILY_CAP
+        value: "20"
+      - fromGroup: bountyloop-shared
+
+# ── Shared Environment Variable Groups ────────────────────────────────────────
+envVarGroups:
+  - name: bountyloop-shared
+    envVars:
+      - key: LOG_LEVEL
+        value: info
+      - key: INTERNAL_SERVICE_TOKEN
+        generateValue: true
+

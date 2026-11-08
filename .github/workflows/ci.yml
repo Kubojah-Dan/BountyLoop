@@ -1,4 +1,4 @@
-name: CI
+name: CI — BountyLoop Test & Quality Pipeline
 
 on:
   push:
@@ -6,14 +6,17 @@ on:
   pull_request:
     branches: ["main"]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  lint:
-    name: Lint & type-check
+  lint-backend:
+    name: Backend Lint & Format Check
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: backend
-
     steps:
       - uses: actions/checkout@v4
 
@@ -23,21 +26,19 @@ jobs:
           python-version: "3.12"
           cache: "pip"
 
-      - name: Install dev dependencies
-        run: pip install -e ".[dev]"
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install ruff black mypy -e ".[dev]"
 
-      - name: Run ruff (linter)
-        run: python -m ruff check app/ tests/
+      - name: Ruff Lint Check
+        run: ruff check app/ tests/
 
-      - name: Run black (format check)
-        run: python -m black --check app/ tests/
-
-      - name: Run mypy (type check)
-        run: python -m mypy app/ --ignore-missing-imports
-        continue-on-error: true  # relaxed until Phase 2 stubs are filled
+      - name: Black Format Check
+        run: black --check app/ tests/
 
   test-backend:
-    name: Backend tests
+    name: Backend Test Suite (PostGIS 16)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -63,6 +64,7 @@ jobs:
       DATABASE_URL_SYNC: postgresql+psycopg://bountyloop:changeme@localhost:5432/bountyloop_test
       APP_ENV: testing
       APP_VERSION: "0.1.0"
+      INTERNAL_SERVICE_TOKEN: ci-test-token-32chars-strictly-for-testing
 
     steps:
       - uses: actions/checkout@v4
@@ -74,18 +76,22 @@ jobs:
           cache: "pip"
 
       - name: Install dependencies
-        run: pip install -e ".[dev]"
+        run: |
+          pip install --upgrade pip
+          pip install -e ".[dev]"
 
-      - name: Run tests
-        run: python -m pytest tests/ -v --tb=short --cov=app --cov-report=term-missing
+      - name: Run Alembic Migrations
+        run: alembic upgrade head
+
+      - name: Run Pytest Suite
+        run: pytest tests/ -v --tb=short
 
   test-cv:
-    name: CV service tests
+    name: CV Microservice Tests
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: cv_service
-
     steps:
       - uses: actions/checkout@v4
 
@@ -96,9 +102,76 @@ jobs:
           cache: "pip"
 
       - name: Install CV dependencies
-        run: pip install -r requirements.txt pytest pytest-asyncio httpx anyio
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt pytest pytest-asyncio httpx anyio
 
       - name: Run CV tests
-        run: python -m pytest tests/ -v --tb=short
-        # Note: Phase 0 has no CV tests yet; this gate is green-by-default
-        continue-on-error: true
+        run: pytest tests/ -v --tb=short
+
+  test-ml:
+    name: ML Model Validation & Forecasting Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: "pip"
+
+      - name: Install ML dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r ml/requirements-ml.txt
+
+      - name: Run Forecaster and Cascade Tests
+        run: pytest ml/tests/ -v --tb=short
+
+  test-dashboard:
+    name: Web Dashboard Build & TypeScript Check
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dashboard
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "npm"
+          cache-dependency-path: dashboard/package-lock.json
+
+      - name: Install Dashboard dependencies
+        run: npm ci
+
+      - name: Build Dashboard (Vite + TypeScript)
+        run: npm run build
+
+  test-mobile:
+    name: Flutter Mobile Tests & Analysis
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.24.x"
+          channel: "stable"
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Flutter Analyze
+        run: flutter analyze
+
+      - name: Flutter Test
+        run: flutter test

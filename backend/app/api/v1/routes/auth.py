@@ -36,7 +36,7 @@ async def create_session(
     """Verify Firebase ID token and return session data with upserted user profile."""
     claims = verify_firebase_token(payload.id_token)
     firebase_uid = claims["uid"]
-    email = claims.get("email") or f"{firebase_uid}@bountyloop.local"
+    email = claims.get("email") or f"{firebase_uid}@bountyloop.org"
     display_name = claims.get("name") or email.split("@")[0]
 
     # Query or upsert user

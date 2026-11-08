@@ -75,6 +75,19 @@ def verify_firebase_token(id_token: str) -> dict[str, Any]:
 
     Raises HTTPException 401 if invalid, expired, or unverified.
     """
+    # Development & test harness fallback when live credentials are unconfigured or mock token is passed
+    if settings.app_env in ("development", "testing") and (
+        id_token.startswith("mock_")
+        or id_token.startswith("test_")
+        or id_token.startswith("smoke_")
+    ):
+        clean_uid = id_token.replace("-", "_").replace(".", "_")[:24]
+        return {
+            "uid": f"fb_{clean_uid}",
+            "email": f"{clean_uid}@bountyloop.org",
+            "name": f"Test User {clean_uid[:8]}",
+        }
+
     init_firebase()
     try:
         decoded = firebase_auth.verify_id_token(id_token)

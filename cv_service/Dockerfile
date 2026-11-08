@@ -14,8 +14,8 @@ RUN pip install --no-cache-dir --upgrade pip && \
 COPY app/ ./app/
 COPY tests/ ./tests/
 
-# Model directory (mounted read-only from ml/artifacts in docker-compose)
-RUN mkdir -p /app/models
+# Model directory baked at build time for Render/container deployment
+COPY models/ ./models/
 
 EXPOSE 8001
 
